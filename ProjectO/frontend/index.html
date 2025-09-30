@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Perplexity AI Demo</title>
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+    <header class="header">
+        <h1>Perplexity AI Demo</h1>
+    </header>
+
+    <main class="container">
+        <section id="query-section">
+            <label for="queryInput">Ask your question:</label>
+            <textarea id="queryInput" placeholder="Type your question here..." rows="4"></textarea>
+            <button id="submitBtn">Submit</button>
+        </section>
+
+        <section id="response-section" hidden>
+            <h2>Response:</h2>
+            <div id="responseOutput"></div>
+            <button id="newQueryBtn">Ask Another</button>
+        </section>
+    </main>
+    <script src="js/main.js"></script>
+</body>
+</html>
