@@ -1,29 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Perplexity AI Demo</title>
-    <link rel="stylesheet" href="css/styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./src/output.css">
+    <title>Document</title>
 </head>
 <body>
-    <header class="header">
-        <h1>Perplexity AI Demo</h1>
+    <header>
+        <div class="   p-5  bg-[rgb(38,40,40)]">
+            <div class="flex items-center">
+            <h3 class="text-amber-50"> Eco Route </h3>
+            <div class="ml-auto flex space-x-8">
+            <button style="color: #13343B;" class="border-1 bg-[rgb(40,184,198)] pb-1 pl-2 pr-2 rounded-lg color: #13343B; ">Dashboard</button>
+            <button  class="  pb-1 pl-2 pr-2 rounded-lg text-[#A7A9A9]  hover:bg-[rgb(119,124,124)] hover:text-amber-500">Route Planner</button>
+            <button  class="pb-1 pl-2 pr-2 rounded-lg  text-[#A7A9A9]  hover:bg-[rgb(119,124,124)] hover:text-amber-300 ">Parking</button>
+            <button  class="  text-[#A7A9A9]   pb-1 pl-2 pr-2 rounded-lg hover:bg-[rgb(119,124,124)] hover:text-emerald-400 "> Carbon Calculator</button>
+            </div>
+            </div>
+        
+        </div>
     </header>
+    <main></main>
+    <footer></footer>
 
-    <main class="container">
-        <section id="query-section">
-            <label for="queryInput">Ask your question:</label>
-            <textarea id="queryInput" placeholder="Type your question here..." rows="4"></textarea>
-            <button id="submitBtn">Submit</button>
-        </section>
-
-        <section id="response-section" hidden>
-            <h2>Response:</h2>
-            <div id="responseOutput"></div>
-            <button id="newQueryBtn">Ask Another</button>
-        </section>
-    </main>
-    <script src="js/main.js"></script>
 </body>
 </html>
