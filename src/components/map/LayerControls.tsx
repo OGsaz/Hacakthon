@@ -50,7 +50,7 @@ const LayerControls = ({ activeLayers, onToggleLayer }: LayerControlsProps) => {
   ];
 
   return (
-    <Card className="w-72 p-4 bg-card/90 backdrop-blur-md border-border shadow-card animate-slide-in">
+    <Card className="w-72 h-56 p-4 bg-card/90 backdrop-blur-md border-border shadow-card animate-slide-in overflow-auto scrollbar">
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
         <Layers className="w-5 h-5 text-primary" />
         <h3 className="font-semibold text-foreground">Map Layers</h3>
@@ -86,11 +86,7 @@ const LayerControls = ({ activeLayers, onToggleLayer }: LayerControlsProps) => {
         })}
       </div>
 
-      <div className="mt-4 pt-4 border-t border-border">
-        <p className="text-xs text-muted-foreground text-center">
-          Toggle layers to visualize campus environmental data
-        </p>
-      </div>
+      
     </Card>
   );
 };

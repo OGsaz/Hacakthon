@@ -43,7 +43,7 @@ const StatsPanel = () => {
   ];
 
   return (
-    <Card className="w-80 p-4 bg-card/90 backdrop-blur-md border-border shadow-card animate-fade-in">
+    <Card className="w-72 h-56 p-4 bg-card/90 backdrop-blur-md border-border shadow-card animate-fade-in absolute right-[75.5rem] overflow-auto top-60 scrollbar">
       <div className="space-y-3">
         <div className="pb-3 border-b border-border">
           <h3 className="font-semibold text-foreground">Campus Impact</h3>
@@ -71,9 +71,7 @@ const StatsPanel = () => {
       </div>
 
       <div className="mt-4 pt-3 border-t border-border text-center">
-        <p className="text-xs text-muted-foreground">
-          Updated <span className="text-primary font-medium">just now</span>
-        </p>
+       
       </div>
     </Card>
   );

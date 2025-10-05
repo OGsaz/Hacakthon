@@ -50,17 +50,16 @@ const MapView = ({ activeLayers }: MapViewProps) => {
 
   return (
     <div ref={mapContainerRef} className="relative w-full h-full bg-gradient-dark">
+            <div id="map" style ={{height: '500px', width: '100%'}}>
       {/* Placeholder Map Background */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Navigation className="w-16 h-16 mx-auto text-primary/30" />
+         
           <div className="space-y-2">
-            <p className="text-muted-foreground text-sm">
-              Map visualization powered by MapmyIndia
-            </p>
-            <p className="text-xs text-muted-foreground/60">
-              Add MapmyIndia API key in config to enable full map features
-            </p>
+
+            </div>
+
+           
           </div>
         </div>
       </div>
@@ -145,5 +144,6 @@ const MapView = ({ activeLayers }: MapViewProps) => {
     </div>
   );
 };
+
 
 export default MapView;
