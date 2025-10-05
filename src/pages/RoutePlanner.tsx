@@ -79,33 +79,10 @@ const RoutePlanner = () => {
     // If the user supplied lat,lng already, return that
     const parsed = tryParseLatLng(query);
     if (parsed) return parsed;
-
-    const key = import.meta.env.VITE_MAPMYINDIA_KEY as string | undefined;
-    if (!key) return null;
-    // MapmyIndia geocoding (Autosuggest)
-    const url = `https://atlas.mapmyindia.com/api/places/geocode?address=${encodeURIComponent(query)}&region=IND`;
-
-    // Some deployments need OAuth token; others allow v1 key headers. Try with key header.
-    const resp = await fetch(url, {
-      headers: {
-        "accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": key,
-      },
-    }).catch(() => null as any);
+    const resp = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`).catch(() => null as any);
     if (!resp || !resp.ok) return null;
     const data = await resp.json();
-    // Attempt common shapes
-    // { copResults: [{ latitude, longitude }] }
-    const lat = data?.copResults?.[0]?.latitude;
-    const lng = data?.copResults?.[0]?.longitude;
-    if (typeof lat === "number" && typeof lng === "number") {
-      return [lat, lng];
-    }
-    // { results: [{ lat, lng }] }
-    if (data?.results?.[0]?.lat && data?.results?.[0]?.lng) {
-      return [parseFloat(data.results[0].lat), parseFloat(data.results[0].lng)];
-    }
+    if (typeof data?.lat === "number" && typeof data?.lng === "number") return [data.lat, data.lng];
     return null;
   }, []);
 
@@ -114,60 +91,12 @@ const RoutePlanner = () => {
     start: LatLngTuple,
     dest: LatLngTuple
   ) => {
-    const key = import.meta.env.VITE_MAPMYINDIA_KEY as string | undefined;
-    if (!key) return null;
-
-    // API docs vary; support two common geometries (encoded polyline or GeoJSON)
-    // Request alternatives, default rtype=0 (fastest) and we will compute shortest/longest from returned options
-    const url = `https://apis.mapmyindia.com/advancedmaps/v1/${key}/route?start=${start[0]},${start[1]}&dest=${dest[0]},${dest[1]}&alternatives=true&rtype=0`;
+    const url = `/api/route?from=${start[0]},${start[1]}&to=${dest[0]},${dest[1]}`;
     const resp = await fetch(url);
     if (!resp.ok) return null;
     const data = await resp.json();
-
-    // Try common shapes
-    // Case A: data.routes: [{ geometry: { coordinates: [[lng,lat],...] } }]
-    // Case B: data.routes: [{ geometry: "encoded_polyline" }]
-
-    const decodePolyline = (encoded: string): LatLngTuple[] => {
-      // Basic Google-style polyline decoder; MapmyIndia may return similar encoding
-      let index = 0, lat = 0, lng = 0;
-      const coordinates: LatLngTuple[] = [];
-      while (index < encoded.length) {
-        let b, shift = 0, result = 0;
-        do {
-          b = encoded.charCodeAt(index++) - 63;
-          result |= (b & 0x1f) << shift;
-          shift += 5;
-        } while (b >= 0x20);
-        const dlat = (result & 1) ? ~(result >> 1) : (result >> 1);
-        lat += dlat;
-
-        shift = 0; result = 0;
-        do {
-          b = encoded.charCodeAt(index++) - 63;
-          result |= (b & 0x1f) << shift;
-          shift += 5;
-        } while (b >= 0x20);
-        const dlng = (result & 1) ? ~(result >> 1) : (result >> 1);
-        lng += dlng;
-        coordinates.push([lat / 1e5, lng / 1e5]);
-      }
-      return coordinates;
-    };
-
-    const routes: Array<{ coords: LatLngTuple[]; distance?: number; duration?: number }> = [];
-    if (Array.isArray(data?.routes)) {
-      for (const r of data.routes) {
-        if (r?.geometry?.coordinates && Array.isArray(r.geometry.coordinates)) {
-          const coords = r.geometry.coordinates.map((c: number[]) => [c[1], c[0]] as LatLngTuple);
-          routes.push({ coords, distance: r?.summary?.distance, duration: r?.summary?.duration });
-        } else if (typeof r?.geometry === "string") {
-          routes.push({ coords: decodePolyline(r.geometry), distance: r?.summary?.distance, duration: r?.summary?.duration });
-        }
-      }
-    }
-    if (!routes.length) return null;
-    return routes;
+    if (!Array.isArray(data?.routes)) return null;
+    return data.routes as Array<{ coords: LatLngTuple[]; distance?: number; duration?: number }>;
   }, []);
 
   const handleFindRoutes = async () => {
