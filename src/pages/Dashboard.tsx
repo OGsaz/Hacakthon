@@ -6,6 +6,7 @@ import AIAssistant from "@/components/ai/AIAssistant";
 import StatsPanel from "@/components/dashboard/StatsPanel";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+const element = document.getElementById("map")
 
 /**
  * Dashboard - Main map-centric view with layer controls
@@ -40,19 +41,43 @@ const Dashboard = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/route-planner")}>
+            <Button variant="ghost" size="sm" onClick={() =>{ 
+              if(element){
+                element.remove()
+              }
+            navigate("/route-planner")
+
+            }}>
               <Route className="w-4 h-4 mr-2" />
               Plan Route
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/parking")}>
+            <Button variant="ghost" size="sm" onClick={() =>{ 
+              if(element){
+                element.remove()
+              }
+            navigate("/route-planner")
+
+           navigate("/parking")}}>
               <MapPin className="w-4 h-4 mr-2" />
               Parking
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/leaderboard")}>
+            <Button variant="ghost" size="sm" onClick={() =>{ 
+              if(element){
+                element.remove()
+              }
+            navigate("/route-planner")
+
+             navigate("/leaderboard")}}>
               <Users className="w-4 h-4 mr-2" />
               Leaderboard
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/admin")}>
+            <Button variant="ghost" size="sm" onClick={() =>{ 
+              if(element){
+                element.remove()
+              }
+            navigate("/route-planner")
+
+            navigate("/admin")}}>
               <Settings className="w-4 h-4 mr-2" />
               Admin
             </Button>
