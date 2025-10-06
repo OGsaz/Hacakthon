@@ -11,6 +11,7 @@ import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet"
 import React from "react";
 import { latLngBounds, Map as LeafletMap } from "leaflet";
 import type { LatLngExpression, LatLngTuple } from "leaflet";
+const  rec = document.getElementById("map")
 
 /**
  * RoutePlanner - Dual-route comparison interface
@@ -163,7 +164,9 @@ const RoutePlanner = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+          <Button variant="ghost" size="icon" onClick={() =>{
+          
+            navigate("/")}}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>

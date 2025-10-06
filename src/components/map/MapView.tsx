@@ -50,8 +50,15 @@ const MapView = ({ activeLayers }: MapViewProps) => {
 
   return (
     <div ref={mapContainerRef} className="relative w-full h-full bg-gradient-dark">
-            <div id="map" style ={{height: '500px', width: '100%'}}>
-      {/* Placeholder Map Background */}
+            <div id="map" style ={{width: "4rem",
+              height: "84vh",
+              bottom: "0rem",
+              left: "308.5px",
+              display: "flex",
+              
+    
+    position: "absolute"}}>
+      {}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center space-y-4">
          
