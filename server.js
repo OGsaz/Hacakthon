@@ -56,6 +56,56 @@ app.get('/api/geocode', async (req, res) => {
   }
 });
 
+// Parking endpoints
+app.get('/api/parking/stats', (req, res) => {
+  const stats = {
+    totalSpots: 230,
+    availableNow: 70,
+    occupancyRate: 70,
+    activeCameras: 18,
+    lastUpdate: new Date().toISOString()
+  };
+  res.json(stats);
+});
+
+app.get('/api/parking/lots', (req, res) => {
+  const lots = [
+    { id: "A", name: "Main Gate Parking", total: 50, occupied: 38, cameras: 4, lastUpdate: "2 min ago" },
+    { id: "B", name: "Library Parking", total: 80, occupied: 56, cameras: 6, lastUpdate: "1 min ago" },
+    { id: "C", name: "Sports Complex", total: 40, occupied: 12, cameras: 3, lastUpdate: "just now" },
+    { id: "D", name: "Academic Block", total: 60, occupied: 54, cameras: 5, lastUpdate: "3 min ago" }
+  ];
+  res.json(lots);
+});
+
+app.post('/api/parking/reserve', (req, res) => {
+  const { lotId, spotId } = req.body;
+  // Simulate reservation
+  res.json({ success: true, reservationId: `RES-${Date.now()}`, lotId, spotId });
+});
+
+app.post('/api/parking/simulate', (req, res) => {
+  const { scenario } = req.body;
+  // Simulate different scenarios
+  res.json({ success: true, scenario, message: `Simulating ${scenario}` });
+});
+
+app.get('/api/parking/export', (req, res) => {
+  // Generate parking report
+  const report = {
+    timestamp: new Date().toISOString(),
+    totalSpots: 230,
+    occupancyRate: 70,
+    lots: [
+      { id: "A", occupancy: 76 },
+      { id: "B", occupancy: 70 },
+      { id: "C", occupancy: 30 },
+      { id: "D", occupancy: 90 }
+    ]
+  };
+  res.json(report);
+});
+
 // Route: returns alternatives, each with coords, distance, duration
 app.get('/api/route', async (req, res) => {
   try {
