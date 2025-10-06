@@ -177,20 +177,20 @@ const RoutePlanner = () => {
           <Card className="lg:col-span-1 p-6 space-y-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="from">From</Label>
+                <Label htmlFor="from">From (city or address)</Label>
                 <Input
                   id="from"
-                  placeholder="lat,lng (e.g. 28.6139,77.2090)"
+                  placeholder="e.g. Connaught Place, New Delhi"
                   className="mt-2"
                   value={fromText}
                   onChange={(e) => setFromText(e.target.value)}
                 />
               </div>
               <div>
-                <Label htmlFor="to">To</Label>
+                <Label htmlFor="to">To (city or address)</Label>
                 <Input
                   id="to"
-                  placeholder="lat,lng (e.g. 28.6350,77.1960)"
+                  placeholder="e.g. India Gate, New Delhi"
                   className="mt-2"
                   value={toText}
                   onChange={(e) => setToText(e.target.value)}
@@ -255,17 +255,10 @@ const RoutePlanner = () => {
                     mapRef.current = map;
                   }}
                 >
-                  {import.meta.env.VITE_MAPMYINDIA_KEY ? (
-                    <RTileLayer
-                      attribution='&copy; MapmyIndia'
-                      url={`https://apis.mapmyindia.com/advancedmaps/v1/${import.meta.env.VITE_MAPMYINDIA_KEY}/tile/2/{z}/{x}/{y}.png`}
-                    />
-                  ) : (
-                    <RTileLayer
-                      attribution='&copy; OpenStreetMap contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                  )}
+                  <RTileLayer
+                    attribution='&copy; OpenStreetMap contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
 
                   {/* Eco route */}
                   <RPolyline

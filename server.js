@@ -13,7 +13,7 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
 
-// Geocode: supports simple address string, returns { lat, lng }
+// Geocode: supports simple address/city string, returns { lat, lng }
 app.get('/api/geocode', async (req, res) => {
   try {
     const q = (req.query.q || '').toString();
@@ -25,26 +25,32 @@ app.get('/api/geocode', async (req, res) => {
       return res.json({ lat: parts[0], lng: parts[1] });
     }
 
-    if (!KEY) return res.status(500).json({ error: 'Missing VITE_MAPMYINDIA_KEY' });
+    // Prefer public Nominatim for robust city/address lookup (no key required)
+    const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
+    const nResp = await fetch(nominatimUrl, { headers: { 'User-Agent': 'EcoNav360/1.0' } });
+    if (nResp.ok) {
+      const arr = await nResp.json();
+      if (Array.isArray(arr) && arr[0]?.lat && arr[0]?.lon) {
+        return res.json({ lat: parseFloat(arr[0].lat), lng: parseFloat(arr[0].lon) });
+      }
+    }
 
-    const url = `https://atlas.mapmyindia.com/api/places/geocode?address=${encodeURIComponent(q)}&region=IND`;
-    const resp = await fetch(url, {
+    // Fallback to MapmyIndia geocode if available
+    if (!KEY) return res.status(404).json({ error: 'no results' });
+    const mmiUrl = `https://atlas.mapmyindia.com/api/places/geocode?address=${encodeURIComponent(q)}&region=IND`;
+    const mResp = await fetch(mmiUrl, {
       headers: {
         'accept': 'application/json',
         'Content-Type': 'application/json',
         'Authorization': KEY,
       },
     });
-    if (!resp.ok) {
-      return res.status(resp.status).json({ error: 'geocode failed' });
-    }
-    const data = await resp.json();
+    if (!mResp.ok) return res.status(404).json({ error: 'no results' });
+    const data = await mResp.json();
     const lat = data?.copResults?.[0]?.latitude ?? (data?.results?.[0]?.lat ? parseFloat(data.results[0].lat) : undefined);
     const lng = data?.copResults?.[0]?.longitude ?? (data?.results?.[0]?.lng ? parseFloat(data.results[0].lng) : undefined);
-    if (typeof lat !== 'number' || typeof lng !== 'number') {
-      return res.status(404).json({ error: 'no results' });
-    }
-    res.json({ lat, lng });
+    if (typeof lat !== 'number' || typeof lng !== 'number') return res.status(404).json({ error: 'no results' });
+    return res.json({ lat, lng });
   } catch (e) {
     res.status(500).json({ error: 'server error' });
   }
