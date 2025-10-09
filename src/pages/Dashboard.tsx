@@ -42,13 +42,13 @@ const Dashboard = () => {
             
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ">
             <Button variant="ghost" size="sm" onClick={() =>{ 
               
             navigate("/route-planner")
 
             }}>
-              <Route className="w-4 h-4 mr-2" />
+              <Route className="w-4 h-4 mr-2 " />
               Plan Route
             </Button>
             <Button variant="ghost" size="sm" onClick={() =>{ 
@@ -82,7 +82,7 @@ const Dashboard = () => {
       {/* Map Container */}
       <div className="page-root relative w-full h-screen">
   
-    <div className="map-wrapper absolute inset-0">
+    <div className="map-wrapper absolute inset-0 ">
   <MapComponent  center={[28.6139, 77.2090]} zoom={13} />
 </div>
 
