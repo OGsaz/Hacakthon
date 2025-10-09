@@ -53,6 +53,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ center = [28.6139, 77.2090]
     shadowSize: [41, 41],
   }),
 }).addTo(map);
+map.setView([latitude, longitude], 15); // Zoom level 15 is good for street-level view
 
 
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState , useEffect} from "react";
 import { ArrowLeft, Navigation, Leaf, Shield, Zap, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,13 +7,36 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useCurrentLocation } from '@/hooks/usecurrentlocation';
+
+
+async function getPlaceName(lat: number, lng: number): Promise<string> {
+  try {
+    const res = await fetch(
+      `https://apis.mapmyindia.com/advancedmaps/v1/a04db67121fe3664027530b21cf43575/rev_geocode?lat=${lat}&lng=${lng}`
+    );
+    const data = await res.json();
+    console.log("Reverse geocode response:", data); // ✅ Confirm structure
+
+    const result = data.results?.[0];
+    const placeName = result?.formatted_address || "Unknown location";
+    return placeName;
+  } catch (err) {
+    console.error("Reverse geocode failed:", err);
+    return "Location not available";
+  }
+}
 
 /**
- * RoutePlanner - Dual-route comparison interface
+ const location = useCurrentLocation() as { lat: number; lng: number } | null;
  * Shows eco-optimized route vs safest route with preference sliders
  */
 const RoutePlanner = () => {
   const navigate = useNavigate();
+  const [startInput, setStartInput] = useState<string>('');
+const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
+const [useCurrent, setUseCurrent] = useState<boolean>(true);
+  const location = useCurrentLocation() as { lat: number; lng: number } | null;
   const [mode, setMode] = useState("walk");
   const [preferences, setPreferences] = useState({
     speed: 50,
@@ -21,7 +44,19 @@ const RoutePlanner = () => {
     quiet: 50,
     avoidDark: 50,
   });
+  
+useEffect(() => {
+  async function fetchPlace() {
+    if (location) {
+      const placeName = await getPlaceName(location.lat, location.lng);
+      setStartInput(placeName);
+      console.log(placeName)
+    }
+  }
+  fetchPlace();
+}, [location]);
 
+  
   const routes = {
     eco: {
       name: "Eco-Optimized Route",
@@ -68,7 +103,29 @@ const RoutePlanner = () => {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="from">From</Label>
-                <Input id="from" placeholder="Start location" className="mt-2" />
+                
+        <select
+          onChange={(e) => setUseCurrent(e.target.value === 'current')}
+          className="mt-2 mb-2 p-2 border rounded w-full"
+        >
+          <option value="current">Use Current Location</option>
+          <option value="manual">Type Location</option>
+        </select>
+
+       <Input
+  id="from"
+  placeholder="Start location"
+  value={
+    useCurrent
+      ? `Your Location (${startInput})`
+      : startInput
+  }
+  onChange={(e) => setStartInput(e.target.value)}
+  disabled={useCurrent}
+  className="mt-2"
+/>
+
+      
               </div>
               <div>
                 <Label htmlFor="to">To</Label>

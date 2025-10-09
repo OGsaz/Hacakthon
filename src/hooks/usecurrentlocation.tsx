@@ -6,8 +6,14 @@ export function useCurrentLocation() {
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
-      (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      (err) => console.error(err),
+      (pos) => {
+        const coords = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        };
+        setLocation(coords);
+      },
+      (err) => console.error("Geolocation error:", err),
       { enableHighAccuracy: true }
     );
   }, []);
