@@ -1,11 +1,11 @@
-const express = require('express');
-const cors = require('cors');
-const fetch = require('node-fetch');
+import express, { json } from 'express';
+import cors from 'cors';
+import fetch from 'node-fetch';
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(json());
 
 const KEY = process.env.VITE_MAPMYINDIA_KEY;
 

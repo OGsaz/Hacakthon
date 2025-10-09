@@ -10,6 +10,7 @@ import Leaderboard from "./pages/Leaderboard";
 import AdminSimulator from "./pages/AdminSimulator";
 import NotFound from "./pages/NotFound";
 
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -29,6 +30,7 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
+    
   </QueryClientProvider>
 );
 
