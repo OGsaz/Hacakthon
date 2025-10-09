@@ -6,7 +6,8 @@ import AIAssistant from "@/components/ai/AIAssistant";
 import StatsPanel from "@/components/dashboard/StatsPanel";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-const element = document.getElementById("map")
+import MapComponent from "@/components/MapComponent";
+
 
 /**
  * Dashboard - Main map-centric view with layer controls
@@ -38,13 +39,12 @@ const Dashboard = () => {
               <h1 className="text-xl font-bold text-foreground">EcoNav 360</h1>
               <p className="text-xs text-muted-foreground">Campus Green Intelligence</p>
             </div>
+            
           </div>
           
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() =>{ 
-              if(element){
-                element.remove()
-              }
+              
             navigate("/route-planner")
 
             }}>
@@ -52,9 +52,7 @@ const Dashboard = () => {
               Plan Route
             </Button>
             <Button variant="ghost" size="sm" onClick={() =>{ 
-              if(element){
-                element.remove()
-              }
+              
             navigate("/route-planner")
 
            navigate("/parking")}}>
@@ -62,9 +60,7 @@ const Dashboard = () => {
               Parking
             </Button>
             <Button variant="ghost" size="sm" onClick={() =>{ 
-              if(element){
-                element.remove()
-              }
+              
             navigate("/route-planner")
 
              navigate("/leaderboard")}}>
@@ -72,9 +68,7 @@ const Dashboard = () => {
               Leaderboard
             </Button>
             <Button variant="ghost" size="sm" onClick={() =>{ 
-              if(element){
-                element.remove()
-              }
+             
             navigate("/route-planner")
 
             navigate("/admin")}}>
@@ -86,9 +80,18 @@ const Dashboard = () => {
       </header>
 
       {/* Map Container */}
-      <div className="absolute inset-0 pt-16">
-        <MapView activeLayers={activeLayers} />
-      </div>
+      <div className="page-root relative w-full h-screen">
+  
+    <div className="map-wrapper absolute inset-0">
+  <MapComponent  center={[28.6139, 77.2090]} zoom={13} />
+</div>
+
+
+      <div className="absolute top-4 left-4 z-20">
+    
+     </div>
+    </div>
+
 
       {/* Layer Controls Panel - Left Side */}
       <div className="absolute left-4 top-24 z-20">
