@@ -45,12 +45,11 @@ const MapComponent: React.FC<MapComponentProps> = ({ center = [28.6139, 77.2090]
     };
   }, [center, zoom]);
 
-  return <div ref={containerRef} style={{ left: "19rem",
-    top: "6rem",
-    width: "74%",
+  return <div ref={containerRef} style={{     width: "70%",
     height: "70%",
-    position: "absolute"
-}} id="leaflet-root" />;
+    position: "absolute",
+    top: "6rem",
+    left: "19rem"}} id="leaflet-root" />;
 };
 
 export default MapComponent;
