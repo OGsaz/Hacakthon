@@ -458,15 +458,21 @@ useEffect(() => {
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/10 rounded-xl hover:bg-muted/20 transition-colors">
                   <span className="text-xs sm:text-sm text-muted-foreground font-medium">Time</span>
-                  <span className="font-bold text-foreground text-sm sm:text-base">{routes.eco.time}</span>
+                  <span className="font-bold text-foreground text-sm sm:text-base">
+                    {haversineKm !== null ? `${Math.round(haversineKm * 5)} min` : routes.eco.time}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-primary/10 rounded-xl hover:bg-primary/20 transition-colors">
                   <span className="text-xs sm:text-sm text-muted-foreground font-medium">CO₂ Emissions</span>
-                  <span className="font-bold text-primary text-sm sm:text-base">{routes.eco.co2}</span>
+                  <span className="font-bold text-primary text-sm sm:text-base">
+                    {haversineKm !== null ? `${(haversineKm * 0.2).toFixed(2)} kg` : routes.eco.co2}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/10 rounded-xl hover:bg-muted/20 transition-colors">
                   <span className="text-xs sm:text-sm text-muted-foreground font-medium">Calories Burned</span>
-                  <span className="font-bold text-foreground text-sm sm:text-base">{routes.eco.calories}</span>
+                  <span className="font-bold text-foreground text-sm sm:text-base">
+                    {haversineKm !== null ? `${Math.round(haversineKm * 70)} kcal` : routes.eco.calories}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-eco-green/10 rounded-xl hover:bg-eco-green/20 transition-colors">
                   <span className="text-xs sm:text-sm text-muted-foreground font-medium">Green Index</span>
@@ -493,24 +499,29 @@ useEffect(() => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {[
-              { mode: "Walk/Cycle", co2: "0 kg", cost: "₹0", color: "eco-green", icon: "🚶" },
-              { mode: "EV/Shuttle", co2: "0.12 kg", cost: "₹8", color: "eco-teal", icon: "🚌" },
-              { mode: "Bus", co2: "0.35 kg", cost: "₹15", color: "eco-amber", icon: "🚍" },
-              { mode: "Car", co2: "0.89 kg", cost: "₹45", color: "eco-orange", icon: "🚗" },
-            ].map((item, index) => (
-              <Card 
-                key={item.mode} 
-                className={`p-3 sm:p-4 border-2 border-${item.color}/30 hover:shadow-glow transition-all duration-300 hover:scale-105 bg-gradient-to-br from-${item.color}/5 to-${item.color}/10 animate-fade-in`}
-                style={{animationDelay: `${index * 0.1}s`}}
-              >
-                <div className="text-center space-y-2">
-                  <div className="text-2xl sm:text-3xl mb-2">{item.icon}</div>
-                  <h4 className="font-bold text-foreground text-xs sm:text-sm">{item.mode}</h4>
-                  <div className={`text-lg sm:text-2xl font-bold text-${item.color}`}>{item.co2}</div>
-                  <p className="text-xs sm:text-sm text-muted-foreground font-medium">Cost: {item.cost}</p>
-                </div>
-              </Card>
-            ))}
+              { mode: "Walk/Cycle", co2PerKm: 0, costPerKm: 0, color: "eco-green", icon: "🚶" },
+              { mode: "EV/Shuttle", co2PerKm: 0.1, costPerKm: 2.20, color: "eco-teal", icon: "🚌" },
+              { mode: "Bus", co2PerKm: 0.3, costPerKm: 12, color: "eco-amber", icon: "🚍" },
+              { mode: "Car", co2PerKm: 0.2, costPerKm: 18, color: "eco-orange", icon: "🚗" },
+            ].map((item, index) => {
+              const calculatedCo2 = haversineKm !== null ? (haversineKm * item.co2PerKm).toFixed(2) : "0.00";
+              const calculatedCost = haversineKm !== null ? (haversineKm * item.costPerKm).toFixed(2) : "0.00";
+              
+              return (
+                <Card 
+                  key={item.mode} 
+                  className={`p-3 sm:p-4 border-2 border-${item.color}/30 hover:shadow-glow transition-all duration-300 hover:scale-105 bg-gradient-to-br from-${item.color}/5 to-${item.color}/10 animate-fade-in`}
+                  style={{animationDelay: `${index * 0.1}s`}}
+                >
+                  <div className="text-center space-y-2">
+                    <div className="text-2xl sm:text-3xl mb-2">{item.icon}</div>
+                    <h4 className="font-bold text-foreground text-xs sm:text-sm">{item.mode}</h4>
+                    <div className={`text-lg sm:text-2xl font-bold text-${item.color}`}>{calculatedCo2} kg</div>
+                    <p className="text-xs sm:text-sm text-muted-foreground font-medium">Cost: ₹{calculatedCost}</p>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </Card>
       </div>
