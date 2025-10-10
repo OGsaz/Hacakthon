@@ -50,43 +50,55 @@ const LayerControls = ({ activeLayers, onToggleLayer }: LayerControlsProps) => {
   ];
 
   return (
-    <Card className="w-72 h-56 p-4 bg-card/90 backdrop-blur-md border-border shadow-card animate-slide-in overflow-auto scrollbar">
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
-        <Layers className="w-5 h-5 text-primary" />
-        <h3 className="font-semibold text-foreground">Map Layers</h3>
+    <Card className="w-64 sm:w-72 h-auto max-h-96 p-4 sm:p-6 bg-card/95 backdrop-blur-xl border border-border/50 shadow-2xl animate-slide-in overflow-hidden hover:shadow-glow transition-all duration-300">
+      <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border/50">
+        <div className="w-8 h-8 rounded-lg bg-gradient-eco flex items-center justify-center">
+          <Layers className="w-4 h-4 text-white" />
+        </div>
+        <div>
+          <h3 className="font-bold text-foreground text-sm sm:text-base">Map Layers</h3>
+          <p className="text-xs text-muted-foreground">Toggle data overlays</p>
+        </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
         {layers.map((layer) => {
           const Icon = layer.icon;
           return (
             <div
               key={layer.id}
-              className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
+              className={`flex items-center justify-between p-3 rounded-xl transition-all duration-300 hover:scale-105 ${
+                activeLayers[layer.id] 
+                  ? 'bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20' 
+                  : 'hover:bg-muted/30'
+              }`}
             >
               <div className="flex items-center gap-3 flex-1">
-                <Icon className={`w-5 h-5 ${layer.color}`} />
-                <div className="flex-1">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  activeLayers[layer.id] ? 'bg-primary/20' : 'bg-muted/20'
+                }`}>
+                  <Icon className={`w-4 h-4 ${layer.color}`} />
+                </div>
+                <div className="flex-1 min-w-0">
                   <Label
                     htmlFor={layer.id}
-                    className="text-sm font-medium text-foreground cursor-pointer"
+                    className="text-sm font-semibold text-foreground cursor-pointer block truncate"
                   >
                     {layer.name}
                   </Label>
-                  <p className="text-xs text-muted-foreground">{layer.description}</p>
+                  <p className="text-xs text-muted-foreground truncate">{layer.description}</p>
                 </div>
               </div>
               <Switch
                 id={layer.id}
                 checked={activeLayers[layer.id]}
                 onCheckedChange={() => onToggleLayer(layer.id)}
+                className="data-[state=checked]:bg-primary"
               />
             </div>
           );
         })}
       </div>
-
-      
     </Card>
   );
 };

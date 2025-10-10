@@ -27,7 +27,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-background">
+    <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-background via-muted/10 to-eco-green/5">
       {/* Top Navigation Bar */}
       <header className="absolute top-0 left-0 right-0 z-30 bg-card/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -79,55 +79,61 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Map Container */}
-      <div className="page-root relative w-full h-screen">
-  
-    <div className="map-wrapper absolute inset-0 ">
-  <MapComponent  center={[28.6139, 77.2090]} zoom={13} />
-</div>
+      {/* Main Content Area - Map and Right Panel Side by Side */}
+      <div className="absolute top-16 left-0 right-0 bottom-0 flex gap-4 p-4">
+        {/* Map Container - 60% width */}
+        <div className="w-3/5 h-full relative">
+          <div className="map-wrapper absolute inset-0 rounded-2xl overflow-hidden shadow-2xl">
+            <MapComponent center={[28.6139, 77.2090]} zoom={13} />
+          </div>
+        </div>
 
-
-      <div className="absolute top-4 left-4 z-20">
-    
-     </div>
-    </div>
-
-
-      {/* Layer Controls Panel - Left Side */}
-      <div className="absolute left-4 top-24 z-20">
-        <LayerControls activeLayers={activeLayers} onToggleLayer={toggleLayer} />
+        {/* Right Panel - 40% width with side-by-side layout */}
+        <div className="w-2/5 h-full flex flex-col gap-3">
+          {/* Top Row - Layer Controls and Campus Impact side by side */}
+          <div className="flex gap-3 h-2/3">
+            {/* Layer Controls Panel - Left side */}
+            <div className="w-1/2 animate-slide-in">
+              <LayerControls activeLayers={activeLayers} onToggleLayer={toggleLayer} />
+            </div>
+            
+            {/* Campus Impact Panel - Right side */}
+            <div className="w-1/2 animate-fade-in">
+              <StatsPanel />
+            </div>
+          </div>
+          
+          {/* Bottom Row - Live Campus Status (smaller, compact) */}
+          <div className="h-1/3">
+            <div className="bg-card/95 backdrop-blur-xl rounded-xl p-3 border border-border/50 shadow-2xl animate-fade-in hover:shadow-glow transition-all duration-300 h-full">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-full bg-gradient-eco flex items-center justify-center">
+                  <Activity className="w-3 h-3 text-white" />
+                </div>
+                <span className="font-semibold text-foreground text-xs sm:text-sm">Live Campus Status</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="text-center p-2 rounded-lg bg-eco-green/5">
+                  <div className="text-eco-green font-bold text-sm">Good (85)</div>
+                  <div className="text-muted-foreground text-xs">Air Quality</div>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-eco-teal/5">
+                  <div className="text-eco-teal font-bold text-sm">67%</div>
+                  <div className="text-muted-foreground text-xs">Parking</div>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-primary/5">
+                  <div className="text-primary font-bold text-sm">High</div>
+                  <div className="text-muted-foreground text-xs">Green Index</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Panel - Top Right */}
-      <div className="absolute right-4 top-24 z-20">
-        <StatsPanel />
-      </div>
-
-      {/* AI Assistant - Bottom Right */}
-      <div className="absolute right-4 bottom-4 z-30">
+      {/* AI Assistant - Bottom Right with higher z-index */}
+      <div className="absolute right-4 bottom-4 z-50">
         <AIAssistant />
-      </div>
-
-      {/* Quick Action Badge - Bottom Left */}
-      <div className="absolute left-4 bottom-4 z-20 bg-card/90 backdrop-blur-md rounded-lg p-4 border border-border shadow-card max-w-xs">
-        <div className="flex items-center gap-3 mb-2">
-          <Activity className="w-5 h-5 text-primary" />
-          <span className="font-semibold text-foreground">Live Campus Status</span>
-        </div>
-        <div className="space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Air Quality:</span>
-            <span className="text-eco-green font-medium">Good (85)</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Parking Available:</span>
-            <span className="text-eco-teal font-medium">67%</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Green Index:</span>
-            <span className="text-primary font-medium">High (0.78)</span>
-          </div>
-        </div>
       </div>
     </div>
   );

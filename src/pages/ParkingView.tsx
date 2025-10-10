@@ -155,40 +155,62 @@ const ParkingView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 sm:p-6">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-32 h-32 bg-eco-teal/5 rounded-full animate-float blur-2xl"></div>
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-eco-green/5 rounded-full animate-float blur-2xl" style={{animationDelay: '1s'}}></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 relative z-10">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 animate-fade-in">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => navigate("/")}
+            className="hover:bg-eco-teal/10 hover:text-eco-teal transition-all duration-300 hover:scale-105"
+          >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-foreground">Smart Parking</h1>
-            <p className="text-muted-foreground">AI-powered real-time parking detection</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground bg-gradient-to-r from-foreground to-eco-teal bg-clip-text text-transparent">
+              Smart Parking
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base">AI-powered real-time parking detection</p>
           </div>
-          <Button onClick={handleViewCameras}>
+          <Button 
+            onClick={handleViewCameras}
+            className="bg-gradient-eco hover:shadow-glow transition-all duration-300 hover:scale-105"
+          >
             <Camera className="w-4 h-4 mr-2" />
             View Cameras
           </Button>
         </div>
 
         {/* Overall Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {[
             { label: "Total Spots", value: stats.totalSpots.toString(), icon: MapPin, color: "primary" },
             { label: "Available Now", value: stats.availableNow.toString(), icon: Car, color: "eco-green" },
             { label: "Occupancy Rate", value: `${stats.occupancyRate}%`, icon: Clock, color: "eco-amber" },
             { label: "Active Cameras", value: stats.activeCameras.toString(), icon: Camera, color: "eco-teal" },
-          ].map((stat) => {
+          ].map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.label} className="p-4">
+              <Card 
+                key={stat.label} 
+                className="p-3 sm:p-4 bg-card/95 backdrop-blur-xl border border-border/50 shadow-2xl hover:shadow-glow transition-all duration-300 hover:scale-105 animate-fade-in"
+                style={{animationDelay: `${index * 0.1}s`}}
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
-                    <p className={`text-2xl font-bold text-${stat.color}`}>{stat.value}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground font-medium">{stat.label}</p>
+                    <p className={`text-lg sm:text-2xl font-bold text-${stat.color}`}>{stat.value}</p>
                   </div>
-                  <Icon className={`w-8 h-8 text-${stat.color}`} />
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-${stat.color}/10 flex items-center justify-center`}>
+                    <Icon className={`w-4 h-4 sm:w-5 sm:h-5 text-${stat.color}`} />
+                  </div>
                 </div>
               </Card>
             );
