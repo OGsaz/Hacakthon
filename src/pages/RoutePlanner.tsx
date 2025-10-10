@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCurrentLocation } from '@/hooks/usecurrentlocation';
 import geocodePlace from '@/pages/geo';
@@ -203,12 +202,6 @@ const debouncedQuery = useDebounce(destinationInput, 300);
     }
   };
 
-  const [preferences, setPreferences] = useState({
-    speed: 50,
-    cleanAir: 50,
-    quiet: 50,
-    avoidDark: 50,
-  });
    const handleDestinationChange = async (query: string) => {
     const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
     const data = await res.json();
@@ -405,29 +398,7 @@ useEffect(() => {
             {/* Mode Selector */}
            
 
-            {/* Preference Sliders */}
-            <div className="space-y-4">
-              <Label className="text-sm font-semibold text-foreground">Route Preferences</Label>
-              {Object.entries(preferences).map(([key, value]) => (
-                <div key={key} className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground capitalize font-medium">
-                      {key.replace(/([A-Z])/g, " $1")}
-                    </span>
-                    <span className="text-foreground font-bold">{value}%</span>
-                  </div>
-                  <Slider
-                    value={[value]}
-                    onValueChange={(vals) =>
-                      setPreferences((prev) => ({ ...prev, [key]: vals[0] }))
-                    }
-                    max={100}
-                    step={1}
-                    className="[&_.slider-track]:bg-primary/20 [&_.slider-range]:bg-gradient-eco"
-                  />
-                </div>
-              ))}
-            </div>
+            {/* Preference Sliders removed per request */}
 
             <Button 
               className="w-full bg-gradient-eco hover:shadow-glow transition-all duration-300 hover:scale-105" 
