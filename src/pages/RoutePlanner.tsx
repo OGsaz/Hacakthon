@@ -306,7 +306,7 @@ useEffect(() => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground bg-gradient-to-r from-foreground to-eco-green bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold  bg-gradient-to-r from-foreground to-eco-green bg-clip-text text-transparent">
               Route Planner
             </h1>
             <p className="text-muted-foreground text-sm sm:text-base">Find your perfect path with smart routing</p>
