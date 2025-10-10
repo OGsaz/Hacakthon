@@ -501,7 +501,7 @@ useEffect(() => {
             {[
               { mode: "Walk/Cycle", co2PerKm: 0, costPerKm: 0, color: "eco-green", icon: "🚶" },
               { mode: "EV/Shuttle", co2PerKm: 0.1, costPerKm: 2.20, color: "eco-teal", icon: "🚌" },
-              { mode: "Bus", co2PerKm: 0.3, costPerKm: 12, color: "eco-amber", icon: "🚍" },
+              { mode: "Bus", co2PerKm: 0.3, costPerKm: 2.5, color: "eco-amber", icon: "🚍" },
               { mode: "Car", co2PerKm: 0.2, costPerKm: 18, color: "eco-orange", icon: "🚗" },
             ].map((item, index) => {
               const calculatedCo2 = haversineKm !== null ? (haversineKm * item.co2PerKm).toFixed(2) : "0.00";
