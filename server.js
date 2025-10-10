@@ -1,7 +1,8 @@
 import express, { json } from 'express';
 import cors from 'cors';
 import fetch from 'node-fetch';
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
 app.use(cors());
@@ -27,31 +28,32 @@ app.get('/api/geocode', async (req, res) => {
 
     // Prefer public Nominatim for robust city/address lookup (no key required)
     const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
-    const nResp = await fetch(nominatimUrl, { headers: { 'User-Agent': 'EcoNav360/1.0' } });
+    const nResp = await fetch(nominatimUrl, { headers: { 'User-Agent': 'EcoNav360/1.0 (contact: dev@example.com)' } });
     if (nResp.ok) {
-      const arr = await nResp.json();
+      let arr;
+      try { arr = await nResp.json(); } catch { arr = []; }
       if (Array.isArray(arr) && arr[0]?.lat && arr[0]?.lon) {
         return res.json({ lat: parseFloat(arr[0].lat), lng: parseFloat(arr[0].lon) });
       }
+    } else {
+      // fallthrough to MapmyIndia if available
     }
 
-    // Fallback to MapmyIndia geocode if available
+    // Fallback to MapmyIndia Advanced Maps key-based geocode if available
     if (!KEY) return res.status(404).json({ error: 'no results' });
-    const mmiUrl = `https://atlas.mapmyindia.com/api/places/geocode?address=${encodeURIComponent(q)}&region=IND`;
-    const mResp = await fetch(mmiUrl, {
-      headers: {
-        'accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': KEY,
-      },
-    });
+    const mmiUrl = `https://apis.mapmyindia.com/advancedmaps/v1/${KEY}/geo_code?addr=${encodeURIComponent(q)}`;
+    const mResp = await fetch(mmiUrl);
     if (!mResp.ok) return res.status(404).json({ error: 'no results' });
-    const data = await mResp.json();
-    const lat = data?.copResults?.[0]?.latitude ?? (data?.results?.[0]?.lat ? parseFloat(data.results[0].lat) : undefined);
-    const lng = data?.copResults?.[0]?.longitude ?? (data?.results?.[0]?.lng ? parseFloat(data.results[0].lng) : undefined);
+    let data;
+    try { data = await mResp.json(); } catch {
+      return res.status(404).json({ error: 'no results' });
+    }
+    const lat = data?.results?.[0]?.lat ? parseFloat(data.results[0].lat) : undefined;
+    const lng = data?.results?.[0]?.lng ? parseFloat(data.results[0].lng) : undefined;
     if (typeof lat !== 'number' || typeof lng !== 'number') return res.status(404).json({ error: 'no results' });
     return res.json({ lat, lng });
   } catch (e) {
+    console.error('Geocode error:', e);
     res.status(500).json({ error: 'server error' });
   }
 });

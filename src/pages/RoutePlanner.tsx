@@ -8,16 +8,50 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCurrentLocation } from '@/hooks/usecurrentlocation';
+import geocodePlace from '@/pages/geo';
+
+// Debounce hook to delay API calls until user stops typing
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+function haversineDistance(
+  [lat1, lon1]: [number, number],
+  [lat2, lon2]: [number, number]
+): number {
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 
 async function getPlaceName(lat: number, lng: number): Promise<string> {
   try {
     const res = await fetch(
-      `https://apis.mapmyindia.com/advancedmaps/v1/a04db67121fe3664027530b21cf43575/rev_geocode?lat=${lat}&lng=${lng}`
+      `https://apis.mapmyindia.com/advancedmaps/v1/95efd4844bc0945df76b5aca082c54bc/rev_geocode?lat=${lat}&lng=${lng}`
     );
     const data = await res.json();
     console.log("Reverse geocode response:", data); // ✅ Confirm structure
-
+    
     const result = data.results?.[0];
     const placeName = result?.formatted_address || "Unknown location";
     return placeName;
@@ -34,27 +68,196 @@ async function getPlaceName(lat: number, lng: number): Promise<string> {
 const RoutePlanner = () => {
   const navigate = useNavigate();
   const [startInput, setStartInput] = useState<string>('');
-const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
-const [useCurrent, setUseCurrent] = useState<boolean>(true);
+  const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
+  const [useCurrent, setUseCurrent] = useState<boolean>(true);
   const location = useCurrentLocation() as { lat: number; lng: number } | null;
   const [mode, setMode] = useState("walk");
+  const [haversineKm, setHaversineKm] = useState<number | null>(null);
+
+  const [submitted, setSubmitted] = useState(false);
+  const [dropdownOptions, setDropdownOptions] = useState<
+  { label: string; value: [number, number] }[]
+>([]);
+
+  // keep currentLocation in sync with geolocation hook
+  useEffect(() => {
+    if (location) {
+      setCurrentLocation([location.lat, location.lng]);
+    }
+  }, [location]);
+
+  // Handle input change and fetch suggestions
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setDestinationInput(value);
+    fetchCitySuggestions(value);
+  };
+
+  // Handle suggestion selection
+  const handleSuggestionSelect = (suggestion: {label: string, value: [number, number]}) => {
+    setDestinationInput(suggestion.label);
+    setDestinationCoords(suggestion.value);
+    setShowDropdown(false);
+    setSuggestions([]);
+    
+    // Calculate distance immediately when suggestion is selected
+    if (currentLocation) {
+      const distance = haversineDistance(currentLocation, suggestion.value);
+      setDisplayedDistance(distance);
+      console.log("Distance calculated from suggestion:", distance.toFixed(2), "km");
+    }
+  };
+
+  const [destinationInput, setDestinationInput] = useState<string>('');
+  const [destinationCoords, setDestinationCoords] = useState<[number, number] | null>(null);
+  const [displayedDistance, setDisplayedDistance] = useState<number | null>(null);
+  const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const [suggestions, setSuggestions] = useState<{label: string, value: [number, number]}[]>([]);
+const debouncedQuery = useDebounce(destinationInput, 300);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.dropdown-container')) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Fetch city suggestions for dropdown
+  const fetchCitySuggestions = async (query: string) => {
+    if (query.length < 2) {
+      setSuggestions([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    try {
+      // Common Indian cities that start with the query
+      const commonCities = [
+        { name: "Delhi", lat: 28.6139, lng: 77.2090 },
+        { name: "Dehradun", lat: 30.3165, lng: 78.0322 },
+        { name: "Dharamshala", lat: 32.2190, lng: 76.3234 },
+        { name: "Dharwad", lat: 15.4589, lng: 75.0078 },
+        { name: "Durgapur", lat: 23.5204, lng: 87.3119 },
+        { name: "Mumbai", lat: 19.0760, lng: 72.8777 },
+        { name: "Mysore", lat: 12.2958, lng: 76.6394 },
+        { name: "Madurai", lat: 9.9252, lng: 78.1198 },
+        { name: "Chennai", lat: 13.0827, lng: 80.2707 },
+        { name: "Chandigarh", lat: 30.7333, lng: 76.7794 },
+        { name: "Kolkata", lat: 22.5726, lng: 88.3639 },
+        { name: "Kochi", lat: 9.9312, lng: 76.2673 },
+        { name: "Bangalore", lat: 12.9716, lng: 77.5946 },
+        { name: "Bhopal", lat: 23.2599, lng: 77.4126 },
+        { name: "Bhubaneswar", lat: 20.2961, lng: 85.8245 },
+        { name: "Pune", lat: 18.5204, lng: 73.8567 },
+        { name: "Patna", lat: 25.5941, lng: 85.1376 },
+        { name: "Jaipur", lat: 26.9124, lng: 75.7873 },
+        { name: "Hyderabad", lat: 17.3850, lng: 78.4867 },
+        { name: "Ahmedabad", lat: 23.0225, lng: 72.5714 },
+      ];
+
+      const filteredCities = commonCities.filter(city => 
+        city.name.toLowerCase().startsWith(query.toLowerCase())
+      );
+
+      const citySuggestions = filteredCities.map(city => ({
+        label: city.name,
+        value: [city.lat, city.lng] as [number, number]
+      }));
+
+      setSuggestions(citySuggestions);
+      setShowDropdown(citySuggestions.length > 0);
+    } catch (error) {
+      console.error("Error fetching city suggestions:", error);
+      setSuggestions([]);
+      setShowDropdown(false);
+    }
+  };
+
+  // Handle Enter key press to calculate distance immediately
+  const handleDestinationKeyPress = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && destinationInput.trim()) {
+      e.preventDefault();
+      setShowDropdown(false);
+      try {
+        const coords = await geocodePlace(destinationInput.trim());
+        if (coords && currentLocation) {
+          const distance = haversineDistance(currentLocation, coords);
+          setDisplayedDistance(distance);
+          setDestinationCoords(coords);
+          console.log("Distance calculated on Enter:", distance.toFixed(2), "km");
+        }
+      } catch (error) {
+        console.error("Error calculating distance on Enter:", error);
+      }
+    }
+  };
+
   const [preferences, setPreferences] = useState({
     speed: 50,
     cleanAir: 50,
     quiet: 50,
     avoidDark: 50,
   });
-  
-useEffect(() => {
-  async function fetchPlace() {
-    if (location) {
-      const placeName = await getPlaceName(location.lat, location.lng);
-      setStartInput(placeName);
-      console.log(placeName)
+   const handleDestinationChange = async (query: string) => {
+    const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
+    const data = await res.json();
+
+    const suggestions = data.suggestedLocations;
+    if (suggestions?.length) {
+      setDropdownOptions(
+        suggestions.map(loc => ({
+          label: loc.placeName,
+          value: [loc.latitude, loc.longitude]
+        }))
+      );
     }
+  };
+  
+  useEffect(() => {
+    async function fetchPlace() {
+      if (location) {
+        const placeName = await getPlaceName(location.lat, location.lng);
+        setStartInput(placeName);
+        console.log(placeName)
+      }
+    }
+    fetchPlace();
+  }, [location]);
+  useEffect(() => {
+    async function fetchDestinationCoords() {
+      if (debouncedQuery.trim()) {
+        const coords = await geocodePlace(debouncedQuery);
+        setDestinationCoords(coords);
+        console.log("Destination coordinates:", coords);
+      }
+    }
+    fetchDestinationCoords();
+  }, [debouncedQuery]);
+  
+  useEffect(() => {
+  if (currentLocation && destinationCoords) {
+    const distance = haversineDistance(currentLocation, destinationCoords);
+    setHaversineKm(distance);
+    setDisplayedDistance(distance); // Also update the displayed distance
+    console.log("Distance (km):", distance.toFixed(2));
+    
   }
-  fetchPlace();
-}, [location]);
+}, [currentLocation, destinationCoords]);
+useEffect(() => {
+  console.log("Debounced query:", debouncedQuery);
+  if (debouncedQuery.trim().length > 2) {
+    handleDestinationChange(debouncedQuery);
+  }
+}, [debouncedQuery]);
+
 
   
   const routes = {
@@ -82,7 +285,7 @@ useEffect(() => {
       cctv: "95% coverage",
     },
   };
-
+  
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -96,10 +299,13 @@ useEffect(() => {
             <p className="text-muted-foreground">Find your perfect path with smart routing</p>
           </div>
         </div>
+     
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Input Panel */}
           <Card className="lg:col-span-1 p-6 space-y-6">
+    
+     
             <div className="space-y-4">
               <div>
                 <Label htmlFor="from">From</Label>
@@ -128,8 +334,59 @@ useEffect(() => {
       
               </div>
               <div>
-                <Label htmlFor="to">To</Label>
-                <Input id="to" placeholder="Destination" className="mt-2" />
+   <Label htmlFor="to">To</Label>
+   <div className="relative dropdown-container">
+     <Input
+       id="to"
+       placeholder="Enter destination"
+       value={destinationInput}
+       onChange={handleInputChange}
+       onKeyPress={handleDestinationKeyPress}
+       className={`mt-2 border ${submitted && destinationInput.trim() === "" ? "border-red-500" : "border-gray-300"}`}
+     />
+     
+     {/* City Suggestions Dropdown */}
+     {showDropdown && suggestions.length > 0 && (
+       <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+         {suggestions.map((suggestion, index) => (
+           <div
+             key={index}
+             className="px-4 py-2 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-b-0"
+             onClick={() => handleSuggestionSelect(suggestion)}
+           >
+             <div className="flex items-center gap-2">
+               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+               <span className="text-sm font-medium text-gray-900">{suggestion.label}</span>
+             </div>
+           </div>
+         ))}
+       </div>
+     )}
+   </div>
+<select onChange={e =>  setDestinationCoords(JSON.parse(e.target.value))}>
+  {dropdownOptions.map((opt, idx) => (
+    <option key={idx} value={JSON.stringify(opt.value)}>
+      {opt.label}
+    </option>
+  ))}
+</select>
+
+{/* Distance Display */}
+{displayedDistance && (
+  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+    <div className="flex items-center gap-2">
+      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+      <span className="text-sm font-medium text-green-800">Distance Calculated!</span>
+    </div>
+    <div className="text-lg font-bold text-green-900 mt-1">
+      {displayedDistance.toFixed(2)} km
+    </div>
+    <div className="text-xs text-green-600 mt-1">
+      Direct distance to {destinationInput}
+    </div>
+  </div>
+)}
+
               </div>
             </div>
 
@@ -194,7 +451,10 @@ useEffect(() => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
                   <span className="text-sm text-muted-foreground">Distance</span>
-                  <span className="font-bold text-foreground">{routes.eco.distance}</span>
+                  <span className="font-bold text-foreground">
+  {haversineKm !== null ? `${haversineKm.toFixed(2)} km` : routes.eco.distance}
+</span>
+
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
                   <span className="text-sm text-muted-foreground">Time</span>
