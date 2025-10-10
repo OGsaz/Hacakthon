@@ -1,10 +1,17 @@
 # make_video_looped.py
 # Generates a seamless-looping 15-second CCTV-style wobble video
 
-import moviepy.editor as mpy
-import numpy as np
-from PIL import Image
-import cv2
+
+try:
+    import moviepy.editor as mpy  # type: ignore
+    MOVIEPY_AVAILABLE = True
+except ImportError:
+    print("⚠️  MoviePy not available, using OpenCV fallback")
+    MOVIEPY_AVAILABLE = False
+
+import numpy as np  # type: ignore
+from PIL import Image  # type: ignore
+import cv2  # type: ignore
 
 # === CONFIG ===
 image_path = "parking_image.png"       # Input image (same folder)
@@ -59,8 +66,23 @@ for i in range(n_frames):
 
 # Create and save video
 print("💾 Rendering looped video...")
-clip = mpy.ImageSequenceClip(frames, fps=fps).resize(height=resolution_height)
-clip.write_videofile(output_path, codec='libx264', audio=False, fps=fps, preset='ultrafast')
+
+if MOVIEPY_AVAILABLE:
+    # Use MoviePy if available
+    clip = mpy.ImageSequenceClip(frames, fps=fps).resize(height=resolution_height)
+    clip.write_videofile(output_path, codec='libx264', audio=False, fps=fps, preset='ultrafast')
+else:
+    # Fallback to OpenCV
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    height, width = frames[0].shape[:2]
+    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+    
+    for frame in frames:
+        # Convert RGB to BGR for OpenCV
+        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        out.write(frame_bgr)
+    
+    out.release()
 
 print(f"✅ Done! Saved as: {output_path}")
 print("🎬 Tip: Enable looping in your media player for a perfect continuous effect.")
