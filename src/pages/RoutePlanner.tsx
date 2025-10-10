@@ -400,19 +400,7 @@ useEffect(() => {
             </div>
 
             {/* Mode Selector */}
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold text-foreground">Travel Mode</Label>
-              <RadioGroup value={mode} onValueChange={setMode} className="grid grid-cols-2 gap-2">
-                {["walk", "cycle", "car", "ev", "shuttle"].map((m) => (
-                  <div key={m} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                    <RadioGroupItem value={m} id={m} className="text-primary" />
-                    <Label htmlFor={m} className="capitalize cursor-pointer text-sm font-medium">
-                      {m}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
+           
 
             {/* Preference Sliders */}
             <div className="space-y-4">

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { deflateRawSync } from 'zlib';
 
 interface MapComponentProps {
   center?: [number, number];
@@ -16,81 +15,90 @@ const MapComponent: React.FC<MapComponentProps> = ({ center = [28.6139, 77.2090]
 
   // 🧭 Initialize map
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = `https://apis.mappls.com/advancedmaps/api/${import.meta.env.VITE_MAPPLS_KEY}/map_sdk?layer=vector&v=3.0`;
-     script.async = true;
     const el = containerRef.current;
     if (!el || mapRef.current) return;
 
-    const map = L.map(el).setView(center, zoom);
-    mapRef.current = map;
+    // Ensure the container has proper dimensions
+    if (el.offsetWidth === 0 || el.offsetHeight === 0) {
+      el.style.width = '100%';
+      el.style.height = '300px';
+    }
 
-    const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${import.meta.env.VITE_MAPPLS_KEY}/map/{z}/{x}/{y}.png`;
-    const osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    try {
+      const map = L.map(el, {
+        zoomControl: true,
+        attributionControl: true
+      }).setView(center, zoom);
+      mapRef.current = map;
 
-    const mapplsLayer = L.tileLayer(mapplsUrl, {
-      attribution: '&copy; MapmyIndia',
-      maxZoom: 19,
-    });
-
-    mapplsLayer.on('tileerror', () => {
-      const fallback = L.tileLayer(osmUrl, {
+      // Use OpenStreetMap as primary tile layer (more reliable)
+      const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19,
       });
-      fallback.addTo(map);
-    });
 
-    mapplsLayer.addTo(map);
+      osmLayer.addTo(map);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setUserCoords([latitude, longitude]);
+      // Try to get user location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setUserCoords([latitude, longitude]);
 
-        const userMarker = L.marker([latitude, longitude], {
-          icon: L.icon({
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-            shadowSize: [41, 41],
-          }),
-        }).addTo(map);
+            // Create custom icon to avoid CDN issues
+            const customIcon = L.divIcon({
+              className: 'custom-marker',
+              html: '<div style="background-color: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+              iconSize: [20, 20],
+              iconAnchor: [10, 10],
+            });
 
-        userMarker.bindPopup("You are here").openPopup();
-        map.setView([latitude, longitude], 15);
-      },
-      (error) => console.error("Geolocation error:", error),
-      { enableHighAccuracy: true }
-    );
+            const userMarker = L.marker([latitude, longitude], {
+              icon: customIcon
+            }).addTo(map);
 
-    return () => {
-      map.remove();
+            userMarker.bindPopup("You are here").openPopup();
+            map.setView([latitude, longitude], 15);
+          },
+          (error) => {
+            console.error("Geolocation error:", error);
+            // Continue with default view if geolocation fails
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      }
+
+      return () => {
+        if (mapRef.current) {
+          mapRef.current.remove();
+          mapRef.current = null;
+        }
+      };
+    } catch (error) {
+      console.error("Map initialization error:", error);
       mapRef.current = null;
-    };
+    }
   }, [center, zoom]);
 
-  // 📍 Geocode destination and calculate distance
+  // 📍 Geocode destination and add marker
   useEffect(() => {
     if (!destination || !mapRef.current || !userCoords) return;
-    console.log(destination);
+    console.log("Adding destination marker for:", destination);
 
     async function geocodePlace(place: string): Promise<[number, number] | null> {
-      const res = await fetch(
-        `https://atlas.mapmyindia.com/api/places/search/json?query=${encodeURIComponent(place)}&auth_token=${import.meta.env.VITE_MAPPLS_KEY}`
-      );
-      const data = await res.json();
-      const result = data.suggestedLocations?.[0];
-      return result ? [result.latitude, result.longitude] : null;
-    }
-
-    async function getDistance(start: [number, number], end: [number, number]): Promise<number | null> {
-    const url = `https://apis.mapmyindia.com/advancedmaps/v1/${import.meta.env.VITE_MAPPLS_KEY}/distance_matrix/driving/${start[1]},${start[0]};${end[1]},${end[0]}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      return data.results?.[0]?.elements?.[0]?.distance?.value ?? null;
+      try {
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(place)}`);
+        const data = await res.json();
+        if (!res.ok) return null;
+        if (typeof data?.lat === 'number' && typeof data?.lng === 'number') {
+          return [data.lat, data.lng];
+        }
+        return null;
+      } catch (error) {
+        console.error("Geocoding error:", error);
+        return null;
+      }
     }
 
     (async () => {
@@ -100,28 +108,33 @@ const MapComponent: React.FC<MapComponentProps> = ({ center = [28.6139, 77.2090]
         return;
       }
 
-      const destMarker = L.marker(destCoords).addTo(mapRef.current!);
+      // Create custom destination icon
+      const destIcon = L.divIcon({
+        className: 'custom-dest-marker',
+        html: '<div style="background-color: #ef4444; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+      });
+
+      const destMarker = L.marker(destCoords, {
+        icon: destIcon
+      }).addTo(mapRef.current!);
       destMarker.bindPopup(`Destination: ${destination}`).openPopup();
 
-      const distance = await getDistance(userCoords, destCoords);
-      if (distance !== null) {
-        console.log(`Distance: ${(distance / 1000).toFixed(2)} km`);
-      }
+      // Fit map to show both markers
+      const bounds = L.latLngBounds([userCoords, destCoords]);
+      mapRef.current!.fitBounds(bounds.pad(0.1));
     })();
   }, [destination, userCoords]);
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        width: "70%",
-        height: "70%",
-        position: "absolute",
-        top: "6rem",
-        left: "19rem"
-      }}
-      id="leaflet-root"
-    />
+    <div className="w-full h-64 sm:h-80 rounded-lg overflow-hidden border border-border/50 shadow-lg">
+      <div
+        ref={containerRef}
+        className="w-full h-full"
+        id="leaflet-root"
+      />
+    </div>
   );
 };
 
