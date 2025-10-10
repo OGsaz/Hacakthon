@@ -3,10 +3,13 @@ import cors from 'cors';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 dotenv.config();
+import mmiRouter from './Backend/routehandler.js';
 
 const app = express();
 app.use(cors());
 app.use(json());
+// Mount user's MapmyIndia router under /mmi to avoid conflicts with our /api/route
+app.use('/mmi', mmiRouter);
 
 const KEY = process.env.VITE_MAPMYINDIA_KEY;
 
@@ -114,21 +117,13 @@ app.get('/api/route', async (req, res) => {
     const from = (req.query.from || '').toString();
     const to = (req.query.to || '').toString();
     if (!from || !to) return res.status(400).json({ error: 'from & to required' });
-    if (!KEY) return res.status(500).json({ error: 'Missing VITE_MAPMYINDIA_KEY' });
-
     const [fromLat, fromLng] = from.split(',').map((v) => parseFloat(v.trim()));
     const [toLat, toLng] = to.split(',').map((v) => parseFloat(v.trim()));
     if (![fromLat, fromLng, toLat, toLng].every((n) => Number.isFinite(n))) {
       return res.status(400).json({ error: 'invalid coords' });
     }
 
-    const url = `https://apis.mapmyindia.com/advancedmaps/v1/${KEY}/route?start=${fromLat},${fromLng}&dest=${toLat},${toLng}&alternatives=true&rtype=0`;
-    const resp = await fetch(url);
-    if (!resp.ok) {
-      return res.status(resp.status).json({ error: 'route failed' });
-    }
-    const data = await resp.json();
-
+    // helper: decode polyline if needed (mmi string geometry)
     const decodePolyline = (encoded) => {
       let index = 0, lat = 0, lng = 0;
       const coordinates = [];
@@ -155,19 +150,15 @@ app.get('/api/route', async (req, res) => {
       return coordinates;
     };
 
-    const routes = [];
-    if (Array.isArray(data?.routes)) {
-      for (const r of data.routes) {
-        if (r?.geometry?.coordinates && Array.isArray(r.geometry.coordinates)) {
-          const coords = r.geometry.coordinates.map((c) => [c[1], c[0]]);
-          routes.push({ coords, distance: r?.summary?.distance, duration: r?.summary?.duration });
-        } else if (typeof r?.geometry === 'string') {
-          routes.push({ coords: decodePolyline(r.geometry), distance: r?.summary?.distance, duration: r?.summary?.duration });
-        }
-      }
-    }
-
-    res.json({ routes });
+    // Routing via OSRM public service (driving) with GeoJSON (always use OSRM to avoid 412s)
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
+    const osrmResp = await fetch(osrmUrl, { headers: { 'User-Agent': 'EcoNav360/1.0' } });
+    if (!osrmResp.ok) return res.status(osrmResp.status).json({ error: 'route failed (osrm)' });
+    const osrmData = await osrmResp.json();
+    const osrmRoute = osrmData?.routes?.[0];
+    if (!osrmRoute?.geometry?.coordinates) return res.status(404).json({ error: 'no route' });
+    const coords = osrmRoute.geometry.coordinates.map((c) => [c[1], c[0]]);
+    return res.json({ routes: [{ coords, distance: osrmRoute.distance, duration: osrmRoute.duration }] });
   } catch (e) {
     res.status(500).json({ error: 'server error' });
   }

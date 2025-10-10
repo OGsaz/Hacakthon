@@ -43,15 +43,15 @@ const StatsPanel = () => {
   ];
 
   return (
-    <Card className="w-64 sm:w-72 h-auto max-h-96 p-4 sm:p-6 bg-card/95 backdrop-blur-xl border border-border/50 shadow-2xl animate-fade-in overflow-hidden hover:shadow-glow transition-all duration-300">
+    <Card className="w-64 sm:w-72 h-auto max-h-96 p-4 sm:p-6 bg-card/95 backdrop-blur-xl border border-border/50 shadow-2xl animate-fade-in overflow-hidden hover:shadow-glow transition-all duration-300 ">
       <div className="space-y-4">
         <div className="pb-4 border-b border-border/50">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-energy flex items-center justify-center">
-              <TrendingDown className="w-4 h-4 text-white" />
+              <TrendingDown className="w-4 h-4 text-white " />
             </div>
             <div>
-              <h3 className="font-bold text-foreground text-sm sm:text-base">Campus Impact</h3>
+              <h3 className="font-bold text-foreground text-sm sm:text-base ">Campus Impact</h3>
               <p className="text-xs text-muted-foreground">Live sustainability metrics</p>
             </div>
           </div>

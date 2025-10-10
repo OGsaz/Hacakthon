@@ -9,6 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCurrentLocation } from '@/hooks/usecurrentlocation';
 import geocodePlace from '@/pages/geo';
+import MapComponent from '@/components/MapComponent';
 
 // Debounce hook to delay API calls until user stops typing
 function useDebounce<T>(value: T, delay: number): T {
@@ -47,7 +48,7 @@ function haversineDistance(
 async function getPlaceName(lat: number, lng: number): Promise<string> {
   try {
     const res = await fetch(
-      `https://apis.mapmyindia.com/advancedmaps/v1/95efd4844bc0945df76b5aca082c54bc/rev_geocode?lat=${lat}&lng=${lng}`
+      `https://apis.mapmyindia.com/advancedmaps/v1/8da2e56e635b5b59885b63e8b1a0216f/rev_geocode?lat=${lat}&lng=${lng}`
     );
     const data = await res.json();
     console.log("Reverse geocode response:", data); // ✅ Confirm structure
@@ -113,6 +114,8 @@ const RoutePlanner = () => {
   const [displayedDistance, setDisplayedDistance] = useState<number | null>(null);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<{label: string, value: [number, number]}[]>([]);
+  const [showMap, setShowMap] = useState<boolean>(false);
+  const [isTracking, setIsTracking] = useState<boolean>(false);
 const debouncedQuery = useDebounce(destinationInput, 300);
 
   // Close dropdown when clicking outside
@@ -426,14 +429,42 @@ useEffect(() => {
               ))}
             </div>
 
-            <Button className="w-full bg-gradient-eco hover:shadow-glow transition-all duration-300 hover:scale-105" size="lg">
+            <Button 
+              className="w-full bg-gradient-eco hover:shadow-glow transition-all duration-300 hover:scale-105" 
+              size="lg"
+              onClick={() => {
+                if (destinationInput.trim() && currentLocation) {
+                  setShowMap(true);
+                  setIsTracking(true);
+                }
+              }}
+            >
               <Navigation className="w-4 h-4 mr-2" />
               Find Routes
             </Button>
           </Card>
 
-          {/* Route Cards */}
-          <div className="lg:col-span-2 grid md:grid-cols-2 gap-4 sm:gap-6">
+          {/* Route Cards and Map */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Map Section */}
+            {showMap && (
+              <Card className="p-4 bg-card/95 backdrop-blur-xl border border-border/50 shadow-2xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-eco flex items-center justify-center">
+                    <Navigation className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">Live Route Tracking</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {isTracking ? "Tracking your location..." : "Ready to track"}
+                    </p>
+                  </div>
+                </div>
+                <MapComponent destination={destinationInput} />
+              </Card>
+            )}
+            
+            <div className="grid md:grid-cols-1 gap-4 sm:gap-6">
             {/* Eco Route */}
             <Card className="p-4 sm:p-6 space-y-4 border-2 border-eco-green/30 hover:shadow-glow transition-all duration-300 hover:scale-105 bg-card/95 backdrop-blur-xl animate-fade-in">
               <div className="flex items-center gap-3">
@@ -476,46 +507,8 @@ useEffect(() => {
                 Follow Eco Route
               </Button>
             </Card>
-
-            {/* Safe Route */}
-            <Card className="p-4 sm:p-6 space-y-4 border-2 border-eco-teal/30 hover:shadow-glow transition-all duration-300 hover:scale-105 bg-card/95 backdrop-blur-xl animate-fade-in" style={{animationDelay: '0.2s'}}>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-eco-teal to-secondary flex items-center justify-center shadow-lg">
-                  <Shield className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-foreground text-sm sm:text-base">{routes.safe.name}</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Maximum safety priority</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 bg-muted/10 rounded-xl hover:bg-muted/20 transition-colors">
-                  <span className="text-xs sm:text-sm text-muted-foreground font-medium">Distance</span>
-                  <span className="font-bold text-foreground text-sm sm:text-base">{routes.safe.distance}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted/10 rounded-xl hover:bg-muted/20 transition-colors">
-                  <span className="text-xs sm:text-sm text-muted-foreground font-medium">Time</span>
-                  <span className="font-bold text-foreground text-sm sm:text-base">{routes.safe.time}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted/10 rounded-xl hover:bg-muted/20 transition-colors">
-                  <span className="text-xs sm:text-sm text-muted-foreground font-medium">CO₂ Emissions</span>
-                  <span className="font-bold text-foreground text-sm sm:text-base">{routes.safe.co2}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-eco-teal/10 rounded-xl hover:bg-eco-teal/20 transition-colors">
-                  <span className="text-xs sm:text-sm text-muted-foreground font-medium">Lighting</span>
-                  <span className="font-bold text-eco-teal text-sm sm:text-base">{routes.safe.lighting}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-eco-teal/10 rounded-xl hover:bg-eco-teal/20 transition-colors">
-                  <span className="text-xs sm:text-sm text-muted-foreground font-medium">CCTV Coverage</span>
-                  <span className="font-bold text-eco-teal text-sm sm:text-base">{routes.safe.cctv}</span>
-                </div>
-              </div>
-
-              <Button className="w-full bg-gradient-to-r from-eco-teal to-secondary hover:shadow-glow transition-all duration-300 hover:scale-105" variant="secondary">
-                Follow Safe Route
-              </Button>
-            </Card>
+            
+            </div>
           </div>
         </div>
 

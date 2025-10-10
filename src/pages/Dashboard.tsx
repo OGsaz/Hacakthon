@@ -83,17 +83,17 @@ const Dashboard = () => {
       <div className="absolute top-16 left-0 right-0 bottom-0 flex gap-4 p-4">
         {/* Map Container - 60% width */}
         <div className="w-3/5 h-full relative">
-          <div className="map-wrapper absolute inset-0 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="map-wrapper absolute inset-0 rounded-2xl overflow-hidden shadow-2xl h-[75vh]">
             <MapComponent center={[28.6139, 77.2090]} zoom={13} />
           </div>
         </div>
 
         {/* Right Panel - 40% width with side-by-side layout */}
-        <div className="w-2/5 h-full flex flex-col gap-3">
+        <div className="w-2/5 h-full flex flex-col gap-3 ">
           {/* Top Row - Layer Controls and Campus Impact side by side */}
-          <div className="flex gap-3 h-2/3">
+          <div className="flex gap-3 h-2/3 ">
             {/* Layer Controls Panel - Left side */}
-            <div className="w-1/2 animate-slide-in">
+            <div className="w-1/2 animate-slide-in ">
               <LayerControls activeLayers={activeLayers} onToggleLayer={toggleLayer} />
             </div>
             
@@ -105,25 +105,25 @@ const Dashboard = () => {
           
           {/* Bottom Row - Live Campus Status (smaller, compact) */}
           <div className="h-1/3">
-            <div className="bg-card/95 backdrop-blur-xl rounded-xl p-3 border border-border/50 shadow-2xl animate-fade-in hover:shadow-glow transition-all duration-300 h-full">
+            <div className="bg-card/95 backdrop-blur-xl rounded-xl p-3 border border-border/50 shadow-2xl animate-fade-in hover:shadow-glow transition-all duration-300 h-full ">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-full bg-gradient-eco flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-gradient-eco flex items-center justify-center ">
                   <Activity className="w-3 h-3 text-white" />
                 </div>
-                <span className="font-semibold text-foreground text-xs sm:text-sm">Live Campus Status</span>
+                <span className="font-semibold text-foreground text-xs sm:text-sm ">Live Campus Status</span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="text-center p-2 rounded-lg bg-eco-green/5">
-                  <div className="text-eco-green font-bold text-sm">Good (85)</div>
-                  <div className="text-muted-foreground text-xs">Air Quality</div>
+                <div className="text-center p-2 rounded-lg bg-eco-green/5 bg-slate-700 hover:scale-[1.08] transition-transform duration-300 cursor-pointer">
+                  <div className="text-eco-green font-bold text-sm  ">Good (85)</div>
+                  <div className="text-muted-foreground text-xs text-white">Air Quality</div>
                 </div>
-                <div className="text-center p-2 rounded-lg bg-eco-teal/5">
+                <div className="text-center p-2 rounded-lg bg-eco-teal/5 bg-slate-700  hover:scale-[1.08] transition-transform duration-300 cursor-pointer">
                   <div className="text-eco-teal font-bold text-sm">67%</div>
-                  <div className="text-muted-foreground text-xs">Parking</div>
+                  <div className="text-muted-foreground text-xs text-white ">Parking</div>
                 </div>
-                <div className="text-center p-2 rounded-lg bg-primary/5">
-                  <div className="text-primary font-bold text-sm">High</div>
-                  <div className="text-muted-foreground text-xs">Green Index</div>
+                <div className="text-center p-2 rounded-lg bg-primary/5 bg-slate-700  hover:scale-[1.08] transition-transform duration-300 cursor-pointer">
+                  <div className="text-primary font-bold text-sm ">High</div>
+                  <div className="text-muted-foreground text-xs text-white ">Green Index</div>
                 </div>
               </div>
             </div>
