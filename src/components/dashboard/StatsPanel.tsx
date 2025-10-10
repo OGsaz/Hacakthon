@@ -43,35 +43,52 @@ const StatsPanel = () => {
   ];
 
   return (
-    <Card className="w-72 h-56 p-4 bg-card/90 backdrop-blur-md border-border shadow-card animate-fade-in absolute right-[75.5rem] overflow-auto top-60 scrollbar">
-      <div className="space-y-3">
-        <div className="pb-3 border-b border-border">
-          <h3 className="font-semibold text-foreground">Campus Impact</h3>
-          <p className="text-xs text-muted-foreground">Live sustainability metrics</p>
+    <Card className="w-64 sm:w-72 h-auto max-h-96 p-4 sm:p-6 bg-card/95 backdrop-blur-xl border border-border/50 shadow-2xl animate-fade-in overflow-hidden hover:shadow-glow transition-all duration-300">
+      <div className="space-y-4">
+        <div className="pb-4 border-b border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-energy flex items-center justify-center">
+              <TrendingDown className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-foreground text-sm sm:text-base">Campus Impact</h3>
+              <p className="text-xs text-muted-foreground">Live sustainability metrics</p>
+            </div>
+          </div>
         </div>
 
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={index}
-              className="p-3 rounded-lg bg-muted/20 hover:bg-muted/40 transition-all"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Icon className={`w-4 h-4 ${stat.color}`} />
-                  <span className="text-sm text-muted-foreground">{stat.label}</span>
+        <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={index}
+                className="p-3 rounded-xl bg-gradient-to-r from-muted/10 to-muted/5 hover:from-muted/20 hover:to-muted/10 transition-all duration-300 hover:scale-105 border border-border/20"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-6 h-6 rounded-md flex items-center justify-center ${stat.color.replace('text-', 'bg-')}/10`}>
+                      <Icon className={`w-3 h-3 ${stat.color}`} />
+                    </div>
+                    <span className="text-xs sm:text-sm text-muted-foreground font-medium">{stat.label}</span>
+                  </div>
+                  <span className={`text-sm sm:text-base font-bold ${stat.color}`}>{stat.value}</span>
                 </div>
-                <span className={`text-sm font-bold ${stat.color}`}>{stat.value}</span>
+                <div className="space-y-1">
+                  <Progress 
+                    value={stat.progress} 
+                    className="h-2 bg-muted/20" 
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>0%</span>
+                    <span className="font-medium">{stat.progress}%</span>
+                    <span>100%</span>
+                  </div>
+                </div>
               </div>
-              <Progress value={stat.progress} className="h-1.5" />
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="mt-4 pt-3 border-t border-border text-center">
-       
+            );
+          })}
+        </div>
       </div>
     </Card>
   );
