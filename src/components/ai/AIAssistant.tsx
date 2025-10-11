@@ -1,15 +1,58 @@
 import { useState } from "react";
-import { MessageSquare, Send, X, Sparkles } from "lucide-react";
+import { Send, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 /**
- * AIAssistant - Context-aware floating chat widget
- * Provides intelligent guidance based on current map view and user actions
- * TODO: Connect to backend AI endpoint for real responses
+ * EcoNav AI Assistant — Pretrained Q&A version
+ * 
+ * ✅ Works fully offline — no backend required.
+ * ✅ Uses a similarity search to find the closest answer to the user's question.
+ * 
+ * To customize: edit the "knowledgeBase" below.
  */
+
+const knowledgeBase = [
+  {
+    q: "what is green index",
+    a: "The Green Index measures vegetation health and eco-sustainability of the campus using NDVI — a value between 0–100 showing how green an area is. 🌱",
+  },
+  {
+    q: "how can i improve green index",
+    a: "Planting more trees, reducing vehicle usage, and conserving water can improve the campus Green Index. Try eco-friendly commuting! 🚴‍♂️",
+  },
+  {
+    q: "which area has lowest green index",
+    a: "Currently, the Law Block zone has the lowest Green Index due to sparse vegetation and water stress. Consider local plantation drives there. 🌳",
+  },
+  {
+    q: "show safest route",
+    a: "The safest route uses well-lit paths with 95% CCTV coverage — marked with green on your map. 🚶‍♀️",
+  },
+  {
+    q: "where can i park",
+    a: "Parking Lot B has 12 available slots right now. It’s the closest and most eco-efficient option. 🚗",
+  },
+  {
+    q: "how to reduce energy usage",
+    a: "Switch to LED lights, power down labs when not in use, and monitor smart meters to reduce overall energy footprint. ⚡",
+  },
+  {
+    q: "what is my eco score",
+    a: "Your current Eco Score is 82 — great job! You’ve reduced 1.5kg CO₂ today through sustainable commuting. 🌍",
+  },
+  {
+    q: "hello",
+    a: "Hi there 👋! I’m your EcoNav AI Assistant. Ask me about parking, safe routes, or your Green Index!",
+  },
+  {
+    q: "thank you",
+    a: "You're welcome! Together we make our campus smarter and greener. 🌿",
+  },
+];
+
 const AIAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
@@ -20,26 +63,43 @@ const AIAssistant = () => {
   ]);
   const [input, setInput] = useState("");
 
+  // --- Utility: find closest matching question ---
+  const findAnswer = (question) => {
+    const normalized = question.toLowerCase().trim();
+    let bestMatch = knowledgeBase[0];
+    let bestScore = 0;
+
+    for (const item of knowledgeBase) {
+      let score = 0;
+      const qWords = item.q.split(" ");
+      for (const word of qWords) {
+        if (normalized.includes(word)) score++;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = item;
+      }
+    }
+
+    if (bestScore === 0) {
+      return "I'm still learning 🌱 — try asking about parking, safe routes, or Green Index!";
+    }
+
+    return bestMatch.a;
+  };
+
   const handleSend = () => {
     if (!input.trim()) return;
 
     const userMessage = { role: "user", content: input };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
 
-    // Simulated AI response (replace with real API call to /api/ai/chat)
+    const botReply = findAnswer(input);
+    const aiMessage = { role: "assistant", content: botReply };
+
     setTimeout(() => {
-      const responses = [
-        "Based on current traffic, the eco-route to the library saves 0.8 kg CO₂ compared to the direct route.",
-        "Parking Lot B has 12 available spots. I can reserve one for you!",
-        "Your eco-score increased by 45 points today! Keep up the green commuting! 🎉",
-        "The safest route to your destination uses well-lit paths with 95% CCTV coverage.",
-      ];
-      const aiMessage = {
-        role: "assistant",
-        content: responses[Math.floor(Math.random() * responses.length)],
-      };
-      setMessages(prev => [...prev, aiMessage]);
-    }, 800);
+      setMessages((prev) => [...prev, aiMessage]);
+    }, 400);
 
     setInput("");
   };
@@ -111,8 +171,8 @@ const AIAssistant = () => {
             placeholder="Ask me anything..."
             className="flex-1 rounded-xl border-border/50 focus:border-primary"
           />
-          <Button 
-            onClick={handleSend} 
+          <Button
+            onClick={handleSend}
             size="icon"
             className="rounded-xl bg-gradient-eco hover:shadow-glow transition-all duration-300"
           >
@@ -120,7 +180,7 @@ const AIAssistant = () => {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2 text-center">
-          Powered by context-aware AI
+          Powered by pre-trained campus intelligence 🌿
         </p>
       </div>
     </Card>

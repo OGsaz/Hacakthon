@@ -21,7 +21,7 @@ const ParkingView = () => {
     totalSpots: 230,
     availableNow: 70,
     occupancyRate: 70,
-    activeCameras: 18
+    activeCameras: 1
   });
   const [loading, setLoading] = useState(true);
   const [simulating, setSimulating] = useState(false);
@@ -39,7 +39,7 @@ const ParkingView = () => {
         const lots = await lotsRes.json();
         const statsData = await statsRes.json();
         setParkingLots(lots);
-        setStats(statsData);
+        setStats({...statsData, activeCameras: 1});
       }
     } catch (error) {
       console.error('Failed to fetch parking data:', error);

@@ -252,7 +252,7 @@ const ParkingVideoModal: React.FC<ParkingVideoModalProps> = ({ isOpen, onClose }
           <div className="mt-3 p-3 bg-gradient-to-r from-blue-900/20 to-green-900/20 rounded-lg border border-blue-500/20">
             <div className="grid grid-cols-3 gap-4 text-center text-white">
               <div>
-                <p className="text-2xl font-bold text-blue-400">18</p>
+                <p className="text-2xl font-bold text-blue-400">1</p>
                 <p className="text-xs text-gray-300">Total Cameras</p>
               </div>
               <div>
