@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import ParkingVideoModal from "@/components/ParkingVideoModal";
 
 /**
  * ParkingView - Real-time parking availability dashboard
@@ -24,6 +25,7 @@ const ParkingView = () => {
   });
   const [loading, setLoading] = useState(true);
   const [simulating, setSimulating] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
 
   // Fetch parking data
   const fetchParkingData = async () => {
@@ -89,9 +91,10 @@ const ParkingView = () => {
   };
 
   const handleViewCameras = () => {
+    setShowVideoModal(true);
     toast({
       title: "Camera View",
-      description: "Opening camera feeds...",
+      description: "Opening live parking lot feed...",
     });
   };
 
@@ -174,7 +177,7 @@ const ParkingView = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground bg-gradient-to-r from-foreground to-eco-teal bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-foreground to-eco-teal bg-clip-text text-transparent">
               Smart Parking
             </h1>
             <p className="text-muted-foreground text-sm sm:text-base">AI-powered real-time parking detection</p>
@@ -331,6 +334,12 @@ const ParkingView = () => {
           </p>
         </Card>
       </div>
+
+      {/* Video Modal */}
+      <ParkingVideoModal 
+        isOpen={showVideoModal} 
+        onClose={() => setShowVideoModal(false)} 
+      />
     </div>
   );
 };
