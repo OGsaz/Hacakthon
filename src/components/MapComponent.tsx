@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './map.css';
+import geocodePlace from '@/pages/geo';
 
 // Utility to ignore tiny location changes
 function isSignificantMove(prev: [number, number], next: [number, number], threshold = 0.0001) {
@@ -204,44 +205,39 @@ const MapComponent: React.FC<MapComponentProps> = React.memo(({
 
   // Geocode destination only when destination string changes
   useEffect(() => {
-    if (!destination || !mapRef.current) return;
-
-    async function geocodePlace(place: string): Promise<[number, number] | null> {
-      try {
-        const res = await fetch(`/api/geocode?q=${encodeURIComponent(place)}`);
-        if (!res.ok) {
-          console.error(`Geocoding failed with status: ${res.status}`);
-          return null;
+    if (!destination || !mapRef.current) {
+      // Clear destination when destination is empty
+      if (!destination) {
+        setResolvedDest(null);
+        // Remove destination marker
+        if (destMarkerRef.current) {
+          mapRef.current?.removeLayer(destMarkerRef.current);
+          destMarkerRef.current = null;
         }
-        const contentType = res.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          console.error('Response is not JSON:', contentType);
-          return null;
+        // Remove route line
+        if (routeLineRef.current) {
+          mapRef.current?.removeLayer(routeLineRef.current);
+          routeLineRef.current = null;
         }
-        const data = await res.json();
-        if (typeof data?.lat === 'number' && typeof data?.lng === 'number') {
-          return [data.lat, data.lng];
-        }
-        return null;
-      } catch (error) {
-        console.error('Geocoding error:', error);
-        return null;
       }
+      return;
     }
+
+    // Use the imported geocodePlace function which handles IIT Roorkee departments locally
 
     (async () => {
       const destCoords = await geocodePlace(destination);
       if (!destCoords) {
-        console.error('Destination not found - server may not be running');
+        console.error('Destination not found:', destination);
         if (mapRef.current) {
           const c = mapRef.current.getCenter();
           L.popup()
             .setLatLng(c)
             .setContent(
               `<div style="padding: 10px; text-align: center;">
-                <p style="margin: 0; color: #ef4444; font-weight: bold;">⚠️ Server Error</p>
-                <p style="margin: 5px 0 0 0; font-size: 12px;">Please ensure the backend server is running</p>
-                <p style="margin: 5px 0 0 0; font-size: 12px;">Destination: ${destination}</p>
+                <p style="margin: 0; color: #ef4444; font-weight: bold;">⚠️ Location Not Found</p>
+                <p style="margin: 5px 0 0 0; font-size: 12px;">Could not find coordinates for: ${destination}</p>
+                <p style="margin: 5px 0 0 0; font-size: 12px;">Try using department names like "Department of Computer Science"</p>
               </div>`
             )
             .openOn(mapRef.current);
@@ -267,31 +263,48 @@ const MapComponent: React.FC<MapComponentProps> = React.memo(({
       destMarkerRef.current.setLatLng(resolvedDest);
     }
 
-    // If we have user coords, fetch a routed path from backend and draw it
-    if (userCoords) {
-      (async () => {
-        try {
-          const from = `${userCoords[0]},${userCoords[1]}`;
-          const to = `${resolvedDest[0]},${resolvedDest[1]}`;
-          const res = await fetch(`/api/route?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
-          if (!res.ok) throw new Error(`route ${res.status}`);
-          const data = await res.json();
-          const coords: [number, number][]= Array.isArray(data?.routes) && data.routes[0]?.coords ? data.routes[0].coords : [userCoords, resolvedDest];
+    // If we have user coords and valid destination, fetch a routed path from backend and draw it
+    if (userCoords && resolvedDest && destination) {
+      // Validate coordinates are reasonable (within India/Asia region)
+      const isValidCoord = (coord: number) => coord >= -90 && coord <= 90;
+      const isValidLat = (lat: number) => lat >= 6 && lat <= 37; // India latitude range
+      const isValidLng = (lng: number) => lng >= 68 && lng <= 97; // India longitude range
+      
+      if (isValidCoord(resolvedDest[0]) && isValidCoord(resolvedDest[1]) && 
+          isValidLat(resolvedDest[0]) && isValidLng(resolvedDest[1])) {
+        (async () => {
+          try {
+            const from = `${userCoords[0]},${userCoords[1]}`;
+            const to = `${resolvedDest[0]},${resolvedDest[1]}`;
+            const res = await fetch(`/api/route?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+            if (!res.ok) throw new Error(`route ${res.status}`);
+            const data = await res.json();
+            const coords: [number, number][]= Array.isArray(data?.routes) && data.routes[0]?.coords ? data.routes[0].coords : [userCoords, resolvedDest];
 
-          // Use debounced update to prevent frequent route redraws
-          updateRouteDebounced(coords);
+            // Use debounced update to prevent frequent route redraws
+            updateRouteDebounced(coords);
 
-          if (!hasFitOnceRef.current) {
-            const bounds = L.latLngBounds(coords);
-            mapRef.current!.fitBounds(bounds.pad(0.15));
-            hasFitOnceRef.current = true;
+            if (!hasFitOnceRef.current) {
+              const bounds = L.latLngBounds(coords);
+              mapRef.current!.fitBounds(bounds.pad(0.15));
+              hasFitOnceRef.current = true;
+            }
+          } catch (error) {
+            console.warn('Backend routing failed, using straight line:', error);
+            // Fallback to simple straight line if routing fails
+            const fallback: [number, number][]= [userCoords, resolvedDest];
+            updateRouteDebounced(fallback);
+            
+            if (!hasFitOnceRef.current) {
+              const bounds = L.latLngBounds(fallback);
+              mapRef.current!.fitBounds(bounds.pad(0.15));
+              hasFitOnceRef.current = true;
+            }
           }
-        } catch {
-          // Fallback to simple straight line if routing fails
-          const fallback: [number, number][]= [userCoords, resolvedDest];
-          updateRouteDebounced(fallback);
-        }
-      })();
+        })();
+      } else {
+        console.warn('Invalid destination coordinates, skipping routing:', resolvedDest);
+      }
     }
   }, [resolvedDest, userCoords, destIcon, updateRouteDebounced]);
 

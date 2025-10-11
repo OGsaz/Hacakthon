@@ -1,5 +1,5 @@
 import { useState , useEffect} from "react";
-import { ArrowLeft, Navigation, Leaf, Shield, Zap, Clock } from "lucide-react";
+import { ArrowLeft, Navigation, Leaf, Shield, Zap, Clock, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -47,7 +47,7 @@ function haversineDistance(
 async function getPlaceName(lat: number, lng: number): Promise<string> {
   try {
     const res = await fetch(
-      `https://apis.mapmyindia.com/advancedmaps/v1/8da2e56e635b5b59885b63e8b1a0216f/rev_geocode?lat=${lat}&lng=${lng}`
+      `https://apis.mapmyindia.com/advancedmaps/v1/138651622f677217c2e720d26f5fce66/rev_geocode?lat=${lat}&lng=${lng}`
     );
     const data = await res.json();
     console.log("Reverse geocode response:", data); // ✅ Confirm structure
@@ -106,6 +106,16 @@ const RoutePlanner = () => {
       setDisplayedDistance(distance);
       console.log("Distance calculated from suggestion:", distance.toFixed(2), "km");
     }
+  };
+
+  // Handle destination clearing
+  const handleDestinationClear = () => {
+    setDestinationInput('');
+    setDestinationCoords(null);
+    setDisplayedDistance(null);
+    setShowDropdown(false);
+    setSuggestions([]);
+    setDropdownOptions([]);
   };
 
   const [destinationInput, setDestinationInput] = useState<string>('');
@@ -173,6 +183,29 @@ const debouncedQuery = useDebounce(destinationInput, 300);
         { name: "Muzaffarnagar", lat: 29.4714, lng: 77.6968 },
         { name: "Rishikesh", lat: 30.1033, lng: 78.2944 },
         { name: "Kotdwar", lat: 29.7452, lng: 78.5222 },
+  
+        { name: "IIT Roorkee Main Gate", lat: 29.8645, lng: 77.8966 },
+        { name: "IIT Roorkee Guest House", lat: 29.8652, lng: 77.8959 },
+        { name: "IIT Basketball Court", lat: 29.8661, lng: 77.8952 },
+        { name: "Department of Paper Technology", lat: 29.8658, lng: 77.8947 },
+        { name: "Cricket And Football Ground", lat: 29.8665, lng: 77.8954 },
+        { name: "Department of Chemical Engineering", lat: 29.8659, lng: 77.8961 },
+        { name: "Mahatma Gandhi Central Library", lat: 29.8654, lng: 77.8958 },
+        { name: "Department of Biosciences", lat: 29.8657, lng: 77.8963 },
+        { name: "Department of Electrical Engineering", lat: 29.8660, lng: 77.8965 },
+        { name: "Department of Civil Engineering", lat: 29.8662, lng: 77.8968 },
+        { name: "Department of Mechanical Engineering", lat: 29.8664, lng: 77.8970 },
+        { name: "Department of Computer Science", lat: 29.8666, lng: 77.8972 },
+        { name: "Department of Mathematics", lat: 29.8668, lng: 77.8974 },
+        { name: "Department of Physics", lat: 29.8670, lng: 77.8976 },
+        { name: "Department of Chemistry", lat: 29.8672, lng: 77.8978 },
+        { name: "Department of Architecture", lat: 29.8674, lng: 77.8980 },
+        { name: "Department of Management Studies", lat: 29.8676, lng: 77.8982 },
+        { name: "Department of Earthquake Engineering", lat: 29.8678, lng: 77.8984 },
+        { name: "Department of Water Resources", lat: 29.8680, lng: 77.8986 },
+        { name: "Department of Metallurgical Engineering", lat: 29.8682, lng: 77.8988 },
+
+
       ];
 
       const filteredCities = commonCities.filter(city => 
@@ -213,17 +246,48 @@ const debouncedQuery = useDebounce(destinationInput, 300);
   };
 
    const handleDestinationChange = async (query: string) => {
-    const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
-    const data = await res.json();
-
-    const suggestions = data.suggestedLocations;
-    if (suggestions?.length) {
-      setDropdownOptions(
-        suggestions.map(loc => ({
-          label: loc.placeName,
-          value: [loc.latitude, loc.longitude]
-        }))
-      );
+    try {
+      // Use local geocoding first for IIT Roorkee departments
+      const coords = await geocodePlace(query);
+      
+      if (coords) {
+        // If we found coordinates locally, add to dropdown options
+        setDropdownOptions([{
+          label: query,
+          value: coords
+        }]);
+        
+        // Calculate distance immediately if we have current location
+        if (currentLocation) {
+          const distance = haversineDistance(currentLocation, coords);
+          setDisplayedDistance(distance);
+          setDestinationCoords(coords);
+          console.log("Distance calculated from local geocoding:", distance.toFixed(2), "km");
+        }
+      } else {
+        // Fallback to API if local geocoding fails
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
+        
+        if (!res.ok) {
+          console.warn(`Geocoding API returned ${res.status} for query: ${query}`);
+          return;
+        }
+        
+        const data = await res.json();
+        const suggestions = data.suggestedLocations;
+        
+        if (suggestions?.length) {
+          setDropdownOptions(
+            suggestions.map(loc => ({
+              label: loc.placeName,
+              value: [loc.latitude, loc.longitude]
+            }))
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error in handleDestinationChange:", error);
+      // Don't set dropdown options on error - let the local suggestions handle it
     }
   };
   
@@ -351,14 +415,27 @@ useEffect(() => {
               <div>
    <Label htmlFor="to">To</Label>
    <div className="relative dropdown-container">
-     <Input
-       id="to"
-       placeholder="Enter destination"
-       value={destinationInput}
-       onChange={handleInputChange}
-       onKeyPress={handleDestinationKeyPress}
-       className={`mt-2 border ${submitted && destinationInput.trim() === "" ? "border-red-500" : "border-gray-300"}`}
-     />
+     <div className="relative">
+       <Input
+         id="to"
+         placeholder="Enter destination"
+         value={destinationInput}
+         onChange={handleInputChange}
+         onKeyPress={handleDestinationKeyPress}
+         className={`mt-2 pr-10 border ${submitted && destinationInput.trim() === "" ? "border-red-500" : "border-gray-300"}`}
+       />
+       {destinationInput && (
+         <Button
+           type="button"
+           variant="ghost"
+           size="sm"
+           onClick={handleDestinationClear}
+           className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
+         >
+           <X className="h-4 w-4 text-gray-500" />
+         </Button>
+       )}
+     </div>
      
      {/* City Suggestions Dropdown */}
      {showDropdown && suggestions.length > 0 && (

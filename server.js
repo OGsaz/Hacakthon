@@ -29,6 +29,68 @@ app.get('/api/geocode', async (req, res) => {
       return res.json({ lat: parts[0], lng: parts[1] });
     }
 
+    // Check for IIT Roorkee departments first
+    const iitDepartments = {
+      // Main campus areas
+      "iit roorkee": { lat: 29.8645, lng: 77.8966 },
+      "iit roorkee main gate": { lat: 29.8645, lng: 77.8966 },
+      "iit roorkee guest house": { lat: 29.8652, lng: 77.8959 },
+      
+      // Academic departments
+      "department of paper technology": { lat: 29.8658, lng: 77.8947 },
+      "department of chemical engineering": { lat: 29.8659, lng: 77.8961 },
+      "department of biosciences": { lat: 29.8657, lng: 77.8963 },
+      "department of electrical engineering": { lat: 29.8660, lng: 77.8965 },
+      "department of civil engineering": { lat: 29.8662, lng: 77.8968 },
+      "department of mechanical engineering": { lat: 29.8664, lng: 77.8970 },
+      "department of computer science": { lat: 29.8666, lng: 77.8972 },
+      "department of mathematics": { lat: 29.8668, lng: 77.8974 },
+      "department of physics": { lat: 29.8670, lng: 77.8976 },
+      "department of chemistry": { lat: 29.8672, lng: 77.8978 },
+      "department of architecture": { lat: 29.8674, lng: 77.8980 },
+      "department of management studies": { lat: 29.8676, lng: 77.8982 },
+      "department of earthquake engineering": { lat: 29.8678, lng: 77.8984 },
+      "department of water resources": { lat: 29.8680, lng: 77.8986 },
+      "department of metallurgical engineering": { lat: 29.8682, lng: 77.8988 },
+      
+      // Facilities
+      "mahatma gandhi central library": { lat: 29.8654, lng: 77.8958 },
+      "iit basketball court": { lat: 29.8661, lng: 77.8952 },
+      "cricket and football ground": { lat: 29.8665, lng: 77.8954 },
+      
+      // Alternative names for easier matching
+      "paper technology": { lat: 29.8658, lng: 77.8947 },
+      "chemical engineering": { lat: 29.8659, lng: 77.8961 },
+      "biosciences": { lat: 29.8657, lng: 77.8963 },
+      "electrical engineering": { lat: 29.8660, lng: 77.8965 },
+      "civil engineering": { lat: 29.8662, lng: 77.8968 },
+      "mechanical engineering": { lat: 29.8664, lng: 77.8970 },
+      "computer science": { lat: 29.8666, lng: 77.8972 },
+      "mathematics": { lat: 29.8668, lng: 77.8974 },
+      "physics": { lat: 29.8670, lng: 77.8976 },
+      "chemistry": { lat: 29.8672, lng: 77.8978 },
+      "architecture": { lat: 29.8674, lng: 77.8980 },
+      "management studies": { lat: 29.8676, lng: 77.8982 },
+      "earthquake engineering": { lat: 29.8678, lng: 77.8984 },
+      "water resources": { lat: 29.8680, lng: 77.8986 },
+      "metallurgical engineering": { lat: 29.8682, lng: 77.8988 },
+      "library": { lat: 29.8654, lng: 77.8958 }
+    };
+
+    const normalizedQuery = q.toLowerCase().trim();
+    
+    // First try exact match
+    if (iitDepartments[normalizedQuery]) {
+      return res.json(iitDepartments[normalizedQuery]);
+    }
+    
+    // Try partial matches for department names
+    for (const [deptName, coords] of Object.entries(iitDepartments)) {
+      if (deptName.includes(normalizedQuery) || normalizedQuery.includes(deptName)) {
+        return res.json(coords);
+      }
+    }
+
     // Prefer public Nominatim for robust city/address lookup (no key required)
     const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
     const nResp = await fetch(nominatimUrl, { headers: { 'User-Agent': 'EcoNav360/1.0 (contact: dev@example.com)' } });
