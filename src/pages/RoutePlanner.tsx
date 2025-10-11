@@ -164,6 +164,16 @@ const debouncedQuery = useDebounce(destinationInput, 300);
         { name: "Jaipur", lat: 26.9124, lng: 75.7873 },
         { name: "Hyderabad", lat: 17.3850, lng: 78.4867 },
         { name: "Ahmedabad", lat: 23.0225, lng: 72.5714 },
+        { name: "Roorkee", lat: 29.8663, lng: 77.8912 },
+        { name: "Manglaur", lat: 29.7430, lng: 77.8912 },
+        { name: "Laksar", lat: 29.7583, lng: 78.0417 },
+        { name: "Saharanpur", lat: 29.9640, lng: 77.5460 },
+        { name: "Chhutmalpur", lat: 30.0030, lng: 77.7090 },
+        { name: "Haridwar", lat: 29.9457, lng: 78.1642 },
+        { name: "Dehradun", lat: 30.3165, lng: 78.0322 },
+        { name: "Muzaffarnagar", lat: 29.4714, lng: 77.6968 },
+        { name: "Rishikesh", lat: 30.1033, lng: 78.2944 },
+        { name: "Kotdwar", lat: 29.7452, lng: 78.5222 },
       ];
 
       const filteredCities = commonCities.filter(city => 

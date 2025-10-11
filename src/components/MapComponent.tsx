@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import './map.css';
 
 // Utility to ignore tiny location changes
 function isSignificantMove(prev: [number, number], next: [number, number], threshold = 0.0001) {
@@ -29,7 +30,7 @@ interface MapComponentProps {
   destination?: string;
 }
 
-const MapComponent: React.FC<MapComponentProps> = ({
+const MapComponent: React.FC<MapComponentProps> = React.memo(({
   center = [28.6139, 77.2090],
   zoom = 13,
   destination,
@@ -102,7 +103,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     }, 250)
   ).current;
 
-  // Initialize map
+  // Initialize map - only once
   useEffect(() => {
     const el = containerRef.current;
     if (!el || mapRef.current) return;
@@ -116,7 +117,9 @@ const MapComponent: React.FC<MapComponentProps> = ({
       const map = L.map(el, {
         zoomControl: true,
         attributionControl: true,
-      }).setView(center, zoom);
+        preferCanvas: true, // Use canvas for better performance
+        renderer: L.canvas(), // Use canvas renderer to prevent flickering
+      }).setView(center as [number, number], zoom);
       mapRef.current = map;
 
       const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -126,57 +129,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
 
       osmLayer.addTo(map);
 
-      // Start geolocation watch if available
-      if (navigator.geolocation && watchIdRef.current === null) {
-        watchIdRef.current = navigator.geolocation.watchPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            const next: [number, number] = [latitude, longitude];
-
-            // Use lastCoordsRef to decide whether to update
-            const last = lastCoordsRef.current;
-            const now = Date.now();
-            const movedEnough = !last || distanceMeters(last, next) > MIN_MOVE_METERS;
-            const intervalEnough = now - lastUpdateTsRef.current > MIN_UPDATE_INTERVAL_MS;
-            if (movedEnough && intervalEnough) {
-              lastCoordsRef.current = next;
-              lastUpdateTsRef.current = now;
-              setUserCoords(next);
-
-              // Place or move user marker
-              if (!userMarkerRef.current) {
-                userMarkerRef.current = L.marker(next, { icon: userIcon }).addTo(mapRef.current!);
-                userMarkerRef.current.bindPopup('You are here');
-                // center first time user appears
-                mapRef.current!.setView(next, 15);
-              } else {
-                // Move marker and pan smoothly
-                userMarkerRef.current.setLatLng(next);
-                // Only pan if user moved significantly to avoid constant re-centering
-                const currentCenter = mapRef.current!.getCenter();
-                const centerDist = distanceMeters([currentCenter.lat, currentCenter.lng], next);
-                if (centerDist > 30) {
-                  try {
-                    mapRef.current!.panTo(next, { animate: true, duration: 0.5 });
-                  } catch {
-                    mapRef.current!.setView(next);
-                  }
-                }
-              }
-            }
-          },
-          (error) => {
-            console.error('Geolocation error:', error);
-          },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
-        );
-      }
-
       return () => {
-        if (watchIdRef.current !== null) {
-          navigator.geolocation.clearWatch(watchIdRef.current);
-          watchIdRef.current = null;
-        }
         if (mapRef.current) {
           mapRef.current.remove();
           mapRef.current = null;
@@ -191,7 +144,63 @@ const MapComponent: React.FC<MapComponentProps> = ({
       console.error('Map initialization error:', error);
       mapRef.current = null;
     }
-  }, [center, zoom, userIcon]);
+  }, []); // Remove dependencies to prevent re-initialization
+
+  // Separate effect for geolocation - only start after map is initialized
+  useEffect(() => {
+    if (!mapRef.current || !navigator.geolocation || watchIdRef.current !== null) return;
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const next: [number, number] = [latitude, longitude];
+
+        // Use lastCoordsRef to decide whether to update
+        const last = lastCoordsRef.current;
+        const now = Date.now();
+        const movedEnough = !last || distanceMeters(last, next) > MIN_MOVE_METERS;
+        const intervalEnough = now - lastUpdateTsRef.current > MIN_UPDATE_INTERVAL_MS;
+        
+        if (movedEnough && intervalEnough) {
+          lastCoordsRef.current = next;
+          lastUpdateTsRef.current = now;
+          setUserCoords(next);
+
+          // Place or move user marker
+          if (!userMarkerRef.current) {
+            userMarkerRef.current = L.marker(next, { icon: userIcon }).addTo(mapRef.current!);
+            userMarkerRef.current.bindPopup('You are here');
+            // center first time user appears
+            mapRef.current!.setView(next, 15);
+          } else {
+            // Move marker and pan smoothly
+            userMarkerRef.current.setLatLng(next);
+            // Only pan if user moved significantly to avoid constant re-centering
+            const currentCenter = mapRef.current!.getCenter();
+            const centerDist = distanceMeters([currentCenter.lat, currentCenter.lng], next);
+            if (centerDist > 30) {
+              try {
+                mapRef.current!.panTo(next, { animate: true, duration: 0.5 });
+              } catch {
+                mapRef.current!.setView(next);
+              }
+            }
+          }
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+    );
+
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+    };
+  }, [userIcon]); // Only depend on userIcon
 
   // Geocode destination only when destination string changes
   useEffect(() => {
@@ -269,15 +278,8 @@ const MapComponent: React.FC<MapComponentProps> = ({
           const data = await res.json();
           const coords: [number, number][]= Array.isArray(data?.routes) && data.routes[0]?.coords ? data.routes[0].coords : [userCoords, resolvedDest];
 
-          if (!routeLineRef.current) {
-            routeLineRef.current = L.polyline(coords, {
-              color: '#2563eb',
-              weight: 5,
-              opacity: 0.9,
-            }).addTo(mapRef.current!);
-          } else {
-            routeLineRef.current.setLatLngs(coords);
-          }
+          // Use debounced update to prevent frequent route redraws
+          updateRouteDebounced(coords);
 
           if (!hasFitOnceRef.current) {
             const bounds = L.latLngBounds(coords);
@@ -287,15 +289,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         } catch {
           // Fallback to simple straight line if routing fails
           const fallback: [number, number][]= [userCoords, resolvedDest];
-          if (!routeLineRef.current) {
-            routeLineRef.current = L.polyline(fallback, {
-              color: '#2563eb',
-              weight: 5,
-              opacity: 0.9,
-            }).addTo(mapRef.current!);
-          } else {
-            routeLineRef.current.setLatLngs(fallback);
-          }
+          updateRouteDebounced(fallback);
         }
       })();
     }
@@ -306,6 +300,16 @@ const MapComponent: React.FC<MapComponentProps> = ({
       <div ref={containerRef} className="w-full h-full" id="leaflet-root" />
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison to prevent unnecessary re-renders
+  return (
+    prevProps.center?.[0] === nextProps.center?.[0] &&
+    prevProps.center?.[1] === nextProps.center?.[1] &&
+    prevProps.zoom === nextProps.zoom &&
+    prevProps.destination === nextProps.destination
+  );
+});
+
+MapComponent.displayName = 'MapComponent';
 
 export default MapComponent;
