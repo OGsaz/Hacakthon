@@ -114,7 +114,7 @@ const ParkingVideoModal: React.FC<ParkingVideoModalProps> = ({ isOpen, onClose }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl w-[90vw] h-[85vh] p-0 bg-black/95 border border-border/50">
+      <DialogContent className="max-w-5xl w-[90vw] h-[85vh] p-0  bg-black/95 border border-border/50">
         <DialogHeader className="p-4 pb-2">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold text-white">
@@ -133,7 +133,7 @@ const ParkingVideoModal: React.FC<ParkingVideoModalProps> = ({ isOpen, onClose }
 
         <div className="flex-1 flex flex-col p-4 pt-2">
           {/* Video Container */}
-          <div className="relative flex-1 bg-black rounded-lg overflow-hidden min-h-0">
+          <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
             {videoError ? (
               <div className="w-full h-full flex flex-col items-center justify-center text-white">
                 <div className="text-center space-y-4">
@@ -144,7 +144,7 @@ const ParkingVideoModal: React.FC<ParkingVideoModalProps> = ({ isOpen, onClose }
                       Please add your parking lot wobble video file to the public directory
                     </p>
                     <div className="text-sm text-gray-500 space-y-1">
-                      <p>Required: <code className="bg-gray-800 px-2 py-1 rounded">parking_lot_wobble_effect_looped.mp4</code></p>
+                      <p>Required: <code className="bg-gray-800 px-2 py-1 rounded h ">parking_lot_wobble_effect_looped.mp4</code></p>
                       <p>Optional: <code className="bg-gray-800 px-2 py-1 rounded">parking-poster.jpg</code></p>
                     </div>
                   </div>
@@ -240,11 +240,7 @@ const ParkingVideoModal: React.FC<ParkingVideoModalProps> = ({ isOpen, onClose }
               </Button>
             </div>
 
-            <div className="flex items-center gap-3 text-white">
-              <span className="text-sm">{formatTime(currentTime)}</span>
-              <span className="text-sm text-gray-400">/</span>
-              <span className="text-sm text-gray-400">{formatTime(duration)}</span>
-            </div>
+            
 
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
