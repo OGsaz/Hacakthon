@@ -47,7 +47,7 @@ function haversineDistance(
 async function getPlaceName(lat: number, lng: number): Promise<string> {
   try {
     const res = await fetch(
-      `https://apis.mapmyindia.com/advancedmaps/v1/138651622f677217c2e720d26f5fce66/rev_geocode?lat=${lat}&lng=${lng}`
+      `https://apis.mapmyindia.com/advancedmaps/v1/e6f1a3564247a6b28f70c161fbe0573a/rev_geocode?lat=${lat}&lng=${lng}`
     );
     const data = await res.json();
     console.log("Reverse geocode response:", data); // ✅ Confirm structure
