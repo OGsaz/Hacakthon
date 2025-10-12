@@ -59,7 +59,7 @@ const MapView = ({ activeLayers }: MapViewProps) => {
     if (scriptLoadedRef.current) return;
 
     const script = document.createElement('script');
-    script.src = 'https://apis.mappls.com/advancedmaps/api/a04db67121fe3664027530b21cf43575/map_sdk?layer=vector&v=3.0'; // Replace with your key
+    script.src = 'https://apis.mappls.com/advancedmaps/api/138651622f677217c2e720d26f5fce66/map_sdk?layer=vector&v=3.0'; // Replace with your key
     script.async = true;
     script.onload = () => {
       console.log('MapmyIndia SDK loaded');
