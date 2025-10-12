@@ -73,6 +73,13 @@ const RoutePlanner = () => {
   const location = useCurrentLocation() as { lat: number; lng: number } | null;
   const [mode, setMode] = useState("walk");
   const [haversineKm, setHaversineKm] = useState<number | null>(null);
+  const [calculatedMetrics, setCalculatedMetrics] = useState<{
+    distance: number;
+    time: number;
+    co2: number;
+    calories: number;
+    greenIndex: number;
+  } | null>(null);
 
   const [submitted, setSubmitted] = useState(false);
   const [dropdownOptions, setDropdownOptions] = useState<
@@ -330,16 +337,35 @@ useEffect(() => {
 
 
   
+  // Function to calculate metrics
+  const calculateEcoMetrics = () => {
+    if (haversineKm !== null) {
+      const distance = haversineKm;
+      const time = Math.round(haversineKm * 5); // 5 minutes per km for walking
+      const co2 = haversineKm * 0.05; // 0.05 kg CO2 per km for walking
+      const calories = Math.round(haversineKm * 50); // 50 calories per km for walking
+      const greenIndex = Math.min(0.95, 0.5 + (haversineKm * 0.1)); // Higher green index for shorter distances
+      
+      setCalculatedMetrics({
+        distance,
+        time,
+        co2,
+        calories,
+        greenIndex
+      });
+    }
+  };
+
   const routes = {
     eco: {
       name: "Eco-Optimized Route",
       icon: Leaf,
       color: "eco-green",
-      distance: "2.4 km",
-      time: "18 min",
-      co2: "0.05 kg",
-      calories: "120 kcal",
-      greenIndex: "0.82",
+      distance: calculatedMetrics ? `${calculatedMetrics.distance.toFixed(2)} km` : "0.00 km",
+      time: calculatedMetrics ? `${calculatedMetrics.time} min` : "0 min",
+      co2: calculatedMetrics ? `${calculatedMetrics.co2.toFixed(2)} kg` : "0.00 kg",
+      calories: calculatedMetrics ? `${calculatedMetrics.calories} kcal` : "0 kcal",
+      greenIndex: calculatedMetrics ? calculatedMetrics.greenIndex.toFixed(2) : "0.00",
       parking: "Lot B (12 spots)",
     },
     safe: {
@@ -494,6 +520,7 @@ useEffect(() => {
                 if (destinationInput.trim() && currentLocation) {
                   setShowMap(true);
                   setIsTracking(true);
+                  calculateEcoMetrics(); // Calculate metrics when finding routes
                 }
               }}
             >
@@ -539,26 +566,25 @@ useEffect(() => {
                 <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
                   <span className="text-sm text-muted-foreground">Distance</span>
                   <span className="font-bold text-foreground">
-  {haversineKm !== null ? `${haversineKm.toFixed(2)} km` : routes.eco.distance}
-</span>
-
+                    {routes.eco.distance}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/10 rounded-xl hover:bg-muted/20 transition-colors">
                   <span className="text-xs sm:text-sm text-muted-foreground font-medium">Time</span>
                   <span className="font-bold text-foreground text-sm sm:text-base">
-                    {haversineKm !== null ? `${Math.round(haversineKm * 5)} min` : routes.eco.time}
+                    {routes.eco.time}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-primary/10 rounded-xl hover:bg-primary/20 transition-colors">
                   <span className="text-xs sm:text-sm text-muted-foreground font-medium">CO₂ Emissions</span>
                   <span className="font-bold text-primary text-sm sm:text-base">
-                    {haversineKm !== null ? `${(haversineKm * 0.2).toFixed(2)} kg` : routes.eco.co2}
+                    {routes.eco.co2}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/10 rounded-xl hover:bg-muted/20 transition-colors">
                   <span className="text-xs sm:text-sm text-muted-foreground font-medium">Calories Burned</span>
                   <span className="font-bold text-foreground text-sm sm:text-base">
-                    {haversineKm !== null ? `${Math.round(haversineKm * 70)} kcal` : routes.eco.calories}
+                    {routes.eco.calories}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-eco-green/10 rounded-xl hover:bg-eco-green/20 transition-colors">
@@ -567,7 +593,11 @@ useEffect(() => {
                 </div>
               </div>
 
-              <Button className="w-full bg-gradient-eco hover:shadow-glow transition-all duration-300 hover:scale-105" variant="default">
+              <Button 
+                className="w-full bg-gradient-eco hover:shadow-glow transition-all duration-300 hover:scale-105" 
+                variant="default"
+                onClick={calculateEcoMetrics}
+              >
                 Follow Eco Route
               </Button>
             </Card>
