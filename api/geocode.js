@@ -12,8 +12,31 @@ export default async function handler(req, res) {
       return res.json({ lat: parts[0], lng: parts[1] });
     }
 
-    // Check for IIT Roorkee departments
-    const iitDepartments = {
+    // Check for common cities and IIT Roorkee departments
+    const commonPlaces = {
+      // Common Indian cities
+      "delhi": { lat: 28.6139, lng: 77.2090 },
+      "dehradun": { lat: 30.3165, lng: 78.0322 },
+      "mumbai": { lat: 19.0760, lng: 72.8777 },
+      "chennai": { lat: 13.0827, lng: 80.2707 },
+      "kolkata": { lat: 22.5726, lng: 88.3639 },
+      "bangalore": { lat: 12.9716, lng: 77.5946 },
+      "hyderabad": { lat: 17.3850, lng: 78.4867 },
+      "pune": { lat: 18.5204, lng: 73.8567 },
+      "ahmedabad": { lat: 23.0225, lng: 72.5714 },
+      "jaipur": { lat: 26.9124, lng: 75.7873 },
+      "lucknow": { lat: 26.8467, lng: 80.9462 },
+      "kanpur": { lat: 26.4499, lng: 80.3319 },
+      "nagpur": { lat: 21.1458, lng: 79.0882 },
+      "surat": { lat: 21.1702, lng: 72.8311 },
+      "patna": { lat: 25.5941, lng: 85.1376 },
+      "indore": { lat: 22.7196, lng: 75.8577 },
+      "thane": { lat: 19.2183, lng: 72.9781 },
+      "bhopal": { lat: 23.2599, lng: 77.4126 },
+      "visakhapatnam": { lat: 17.6868, lng: 83.2185 },
+      "chandigarh": { lat: 30.7333, lng: 76.7794 },
+      
+      // IIT Roorkee locations
       "iit roorkee": { lat: 29.8645, lng: 77.8966 },
       "iit roorkee main gate": { lat: 29.8645, lng: 77.8966 },
       "iit roorkee guest house": { lat: 29.8652, lng: 77.8959 },
@@ -55,12 +78,14 @@ export default async function handler(req, res) {
 
     const normalizedQuery = q.toLowerCase().trim();
     
-    if (iitDepartments[normalizedQuery]) {
-      return res.json(iitDepartments[normalizedQuery]);
+    // First check exact match
+    if (commonPlaces[normalizedQuery]) {
+      return res.json(commonPlaces[normalizedQuery]);
     }
     
-    for (const [deptName, coords] of Object.entries(iitDepartments)) {
-      if (deptName.includes(normalizedQuery) || normalizedQuery.includes(deptName)) {
+    // Then check partial matches
+    for (const [placeName, coords] of Object.entries(commonPlaces)) {
+      if (placeName.includes(normalizedQuery) || normalizedQuery.includes(placeName)) {
         return res.json(coords);
       }
     }

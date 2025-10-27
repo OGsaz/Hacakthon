@@ -1,7 +1,29 @@
 async function geocodePlace(place: string): Promise<[number, number] | null> {
   try {
-    // First try local IIT Roorkee department coordinates
-    const iitDepartments: { [key: string]: [number, number] } = {
+    // First try local coordinates for common places
+    const localPlaces: { [key: string]: [number, number] } = {
+      // Common cities
+      "delhi": [28.6139, 77.2090],
+      "dehradun": [30.3165, 78.0322],
+      "mumbai": [19.0760, 72.8777],
+      "chennai": [13.0827, 80.2707],
+      "kolkata": [22.5726, 88.3639],
+      "bangalore": [12.9716, 77.5946],
+      "hyderabad": [17.3850, 78.4867],
+      "pune": [18.5204, 73.8567],
+      "ahmedabad": [23.0225, 72.5714],
+      "jaipur": [26.9124, 75.7873],
+      "lucknow": [26.8467, 80.9462],
+      "kanpur": [26.4499, 80.3319],
+      "nagpur": [21.1458, 79.0882],
+      "surat": [21.1702, 72.8311],
+      "patna": [25.5941, 85.1376],
+      "indore": [22.7196, 75.8577],
+      "thane": [19.2183, 72.9781],
+      "bhopal": [23.2599, 77.4126],
+      "visakhapatnam": [17.6868, 83.2185],
+      "chandigarh": [30.7333, 76.7794],
+      
       // Main campus areas
       "iit roorkee": [29.8645, 77.8966],
       "iit roorkee main gate": [29.8645, 77.8966],
@@ -51,23 +73,34 @@ async function geocodePlace(place: string): Promise<[number, number] | null> {
     const normalizedPlace = place.toLowerCase().trim();
     
     // First try exact match
-    if (iitDepartments[normalizedPlace]) {
-      return iitDepartments[normalizedPlace];
+    if (localPlaces[normalizedPlace]) {
+      return localPlaces[normalizedPlace];
     }
     
-    // Try partial matches for department names
-    for (const [deptName, coords] of Object.entries(iitDepartments)) {
-      if (deptName.includes(normalizedPlace) || normalizedPlace.includes(deptName)) {
+    // Try partial matches for places
+    for (const [placeName, coords] of Object.entries(localPlaces)) {
+      if (placeName.includes(normalizedPlace) || normalizedPlace.includes(placeName)) {
         return coords;
       }
     }
 
     // Try API geocoding as fallback
-    const res = await fetch(`/api/geocode?q=${encodeURIComponent(place)}`);
-    const data = await res.json();
-    if (!res.ok) return null;
-    if (typeof data?.lat === 'number' && typeof data?.lng === 'number') {
-      return [data.lat, data.lng];
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(place)}`);
+      if (!res.ok) return null;
+      
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.warn("Geocoding API returned non-JSON response");
+        return null;
+      }
+      
+      const data = await res.json();
+      if (typeof data?.lat === 'number' && typeof data?.lng === 'number') {
+        return [data.lat, data.lng];
+      }
+    } catch (fetchError) {
+      console.error("Fetch error in geocoding:", fetchError);
     }
     return null;
   } catch (error) {
