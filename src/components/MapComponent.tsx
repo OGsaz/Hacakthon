@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import './map.css';
 import geocodePlace from '@/pages/geo';
 
 // Utility to ignore tiny location changes
