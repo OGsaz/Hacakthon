@@ -1,4 +1,15 @@
 export default async function handler(req, res) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   const { q } = req.query;
 
   if (!q) {
@@ -92,7 +103,6 @@ export default async function handler(req, res) {
 
     // Try Nominatim (OpenStreetMap)
     const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
-    const fetch = (await import('node-fetch')).default;
     
     const nResp = await fetch(nominatimUrl, { 
       headers: { 'User-Agent': 'EcoNav360/1.0 (contact: dev@example.com)' } 
