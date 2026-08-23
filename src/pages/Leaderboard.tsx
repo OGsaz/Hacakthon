@@ -212,7 +212,7 @@ const Leaderboard = () => {
         </Card>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Leaderboard;
+export default Leaderboard
