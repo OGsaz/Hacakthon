@@ -341,7 +341,7 @@ const ParkingView = () => {
         onClose={() => setShowVideoModal(false)} 
       />
     </div>
-  );
-};
+  )
+}
 
-export default ParkingView;
+export default ParkingView
