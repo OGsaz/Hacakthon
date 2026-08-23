@@ -125,6 +125,6 @@ export default async function handler(req, res) {
   } catch (e) {
     console.error('Geocode error:', e);
     return res.status(500).json({ error: 'server error' });
-  }
-}
+  };
+};
 
