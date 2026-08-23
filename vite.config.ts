@@ -9,6 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig(({ mode }) => ({
+  // base: "/", // Use absolute paths for Vercel
   server: {
     host: "::",
     port: 8080,
@@ -17,6 +18,15 @@ export default defineConfig(({ mode }) => ({
         target: "http://localhost:5174",
         changeOrigin: true,
         secure: false,
+      },
+    },
+  },
+  build: {
+    outDir: "dist",
+    assetsDir: "assets",
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
       },
     },
   },
