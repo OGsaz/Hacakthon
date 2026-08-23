@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 /**
  * Leaderboard - Gamified eco-score rankings
  * Shows individual users and departments with badges and achievements
- */
+ */  
+//dont know what this line does  just editing it 
 const Leaderboard = () => {
   const navigate = useNavigate();
 
