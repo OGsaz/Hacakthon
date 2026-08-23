@@ -643,7 +643,7 @@ useEffect(() => {
         </Card>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default RoutePlanner;
+export default RoutePlanner
