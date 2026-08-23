@@ -225,7 +225,7 @@ const AdminSimulator = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AdminSimulator;
+export default AdminSimulator
