@@ -3,8 +3,8 @@ async function geocodePlace(place: string): Promise<[number, number] | null> {
     // First try local coordinates for common places
     const localPlaces: { [key: string]: [number, number] } = {
       // Common cities
-      "delhi": [28.6139, 77.2090],
-      "dehradun": [30.3165, 78.0322],
+      "delhi": [28.6138, 77.2091],
+      "dehradun": [30.3164, 78.0323],
       "mumbai": [19.0760, 72.8777],
       "chennai": [13.0827, 80.2707],
       "kolkata": [22.5726, 88.3639],
